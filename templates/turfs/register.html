@@ -1,0 +1,404 @@
+{% extends 'base.html' %}
+
+{% block title %}Create Account - BookMyTurf {{ current_city|default:'Rajkot' }}{% endblock %}
+
+{% block content %}
+<div class="min-h-[75vh] flex items-center justify-center px-4 py-12">
+    <div class="w-full max-w-md bg-white rounded-3xl p-8 border border-slate-200/80 shadow-xl">
+        <div class="text-center mb-8">
+            <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-brand-600 to-emerald-400 text-white flex items-center justify-center mx-auto mb-3 shadow-md shadow-brand-500/20">
+                <i data-lucide="user-plus" class="w-6 h-6"></i>
+            </div>
+            <h1 class="text-2xl font-black text-slate-900 tracking-tight">Create an account</h1>
+            <p class="text-xs text-slate-500 mt-1">Start booking your favorite sports turfs in {{ current_city|default:'Rajkot' }}</p>
+        </div>
+
+        <form id="registerForm" method="POST" action="{% url 'register' %}" class="space-y-4" novalidate>
+            {% csrf_token %}
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">First Name *</label>
+                    <input type="text" id="regFirstName" name="first_name" required minlength="2" placeholder="John" value="{{ form_data.first_name|default:'' }}"
+                           class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 transition-all">
+                    <span id="firstNameError" class="text-[11px] text-rose-500 mt-1 hidden font-semibold"></span>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Last Name</label>
+                    <input type="text" id="regLastName" name="last_name" placeholder="Doe" value="{{ form_data.last_name|default:'' }}"
+                           class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 transition-all">
+                </div>
+            </div>
+
+            <!-- Email Address with mandatory @ and . validation -->
+            <div>
+                <div class="flex items-center justify-between mb-1.5">
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-600">Email Address *</label>
+                </div>
+                <div class="relative">
+                    <i data-lucide="mail" class="absolute left-3.5 top-3.5 w-4 h-4 text-slate-400"></i>
+                    <input type="email" id="regEmail" name="email" required placeholder="john@example.com" value="{{ form_data.email|default:'' }}"
+                           class="w-full pl-10 pr-10 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 transition-all">
+                    <span id="emailStatusIcon" class="absolute right-3.5 top-3.5 hidden"></span>
+                </div>
+                <span id="emailError" class="text-[11px] mt-1 hidden font-semibold"></span>
+            </div>
+
+            <!-- Mobile Phone with mandatory 10 digits validation -->
+            <div>
+                <div class="flex items-center justify-between mb-1.5">
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-600">Mobile Number *</label>
+                </div>
+                <div class="relative">
+                    <i data-lucide="phone" class="absolute left-3.5 top-3.5 w-4 h-4 text-slate-400"></i>
+                    <input type="tel" id="regPhone" name="phone" required placeholder="9876543210" maxlength="14" value="{{ form_data.phone|default:'' }}"
+                           class="w-full pl-10 pr-10 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 transition-all">
+                    <span id="phoneStatusIcon" class="absolute right-3.5 top-3.5 hidden"></span>
+                </div>
+                <span id="phoneError" class="text-[11px] mt-1 hidden font-semibold"></span>
+            </div>
+
+            <!-- Password with mandatory 8 characters validation -->
+            <div>
+                <div class="flex items-center justify-between mb-1.5">
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-600">Password *</label>
+                </div>
+                <div class="relative">
+                    <i data-lucide="lock" class="absolute left-3.5 top-3.5 w-4 h-4 text-slate-400"></i>
+                    <input type="password" name="password" id="regPassword" required minlength="8" placeholder="••••••••"
+                           class="w-full pl-10 pr-10 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 transition-all">
+                    <button type="button" onclick="togglePass('regPassword', this)" class="absolute right-3.5 top-3.5 text-slate-400 hover:text-slate-600 cursor-pointer">
+                        <i data-lucide="eye" class="w-4 h-4"></i>
+                    </button>
+                </div>
+                <!-- Strength bar -->
+                <div id="passStrengthBar" class="h-1.5 w-full bg-slate-100 rounded-full mt-2 overflow-hidden hidden">
+                    <div id="passStrengthFill" class="h-full bg-rose-500 transition-all duration-300 w-0"></div>
+                </div>
+                <span id="passError" class="text-[11px] mt-1 hidden font-semibold"></span>
+            </div>
+
+            <!-- Confirm Password -->
+            <div>
+                <div class="flex items-center justify-between mb-1.5">
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-600">Confirm Password *</label>
+                    <span id="confirmMatchText" class="text-[11px] font-semibold hidden"></span>
+                </div>
+                <div class="relative">
+                    <i data-lucide="lock" class="absolute left-3.5 top-3.5 w-4 h-4 text-slate-400"></i>
+                    <input type="password" name="confirm_password" id="regConfirmPassword" required minlength="8" placeholder="••••••••"
+                           class="w-full pl-10 pr-10 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 transition-all">
+                    <button type="button" onclick="togglePass('regConfirmPassword', this)" class="absolute right-3.5 top-3.5 text-slate-400 hover:text-slate-600 cursor-pointer">
+                        <i data-lucide="eye" class="w-4 h-4"></i>
+                    </button>
+                </div>
+                <span id="confirmPassError" class="text-[11px] mt-1 hidden font-semibold"></span>
+            </div>
+
+            <button type="submit" id="submitBtn" class="w-full py-3.5 rounded-2xl bg-brand-600 hover:bg-brand-500 text-white font-extrabold text-sm shadow-lg shadow-brand-600/30 transition-all mt-3 cursor-pointer">
+                Create Account
+            </button>
+        </form>
+
+        <div class="mt-8 pt-6 border-t border-slate-100 text-center">
+            <p class="text-xs text-slate-500">
+                Already have an account? 
+                <a href="{% url 'login' %}" class="font-bold text-brand-600 hover:underline">Sign In</a>
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function togglePass(inputId, btn) {
+        const input = document.getElementById(inputId);
+        if (input.type === 'password') {
+            input.type = 'text';
+            btn.innerHTML = '<i data-lucide="eye-off" class="w-4 h-4"></i>';
+        } else {
+            input.type = 'password';
+            btn.innerHTML = '<i data-lucide="eye" class="w-4 h-4"></i>';
+        }
+        lucide.createIcons();
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const form = document.getElementById('registerForm');
+        const firstName = document.getElementById('regFirstName');
+        const firstNameError = document.getElementById('firstNameError');
+        
+        const email = document.getElementById('regEmail');
+        const emailError = document.getElementById('emailError');
+        const emailIcon = document.getElementById('emailStatusIcon');
+
+        const phone = document.getElementById('regPhone');
+        const phoneError = document.getElementById('phoneError');
+        const phoneCounter = document.getElementById('phoneCounter');
+        const phoneIcon = document.getElementById('phoneStatusIcon');
+
+        const pass = document.getElementById('regPassword');
+        const passError = document.getElementById('passError');
+        const passCounter = document.getElementById('passCounter');
+        const passBar = document.getElementById('passStrengthBar');
+        const passFill = document.getElementById('passStrengthFill');
+
+        const confirmPass = document.getElementById('regConfirmPassword');
+        const confirmPassError = document.getElementById('confirmPassError');
+        const confirmMatchText = document.getElementById('confirmMatchText');
+
+        // Helper: extract raw 10 digits
+        function extract10Digits(val) {
+            let d = val.replace(/[\s\-\(\)\.]/g, '');
+            if (d.startsWith('+91')) d = d.substring(3);
+            else if (d.startsWith('91') && d.length === 12) d = d.substring(2);
+            else if (d.startsWith('0') && d.length === 11) d = d.substring(1);
+            d = d.replace(/\+/g, '');
+            return d;
+        }
+
+        // Helper: validate email structure with @ and .
+        function isValidEmail(val) {
+            if (!val) return false;
+            val = val.trim();
+            if (!val.includes('@') || !val.includes('.')) return false;
+            // standard email check
+            const re = /^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*\.[a-zA-Z]{2,}$/;
+            return re.test(val);
+        }
+
+        // Validate First Name
+        function validateFirstName() {
+            const val = firstName.value.trim();
+            if (val.length < 2) {
+                firstName.classList.add('border-rose-300', 'bg-rose-50/30');
+                firstName.classList.remove('border-emerald-400');
+                firstNameError.textContent = 'First name must be at least 2 characters.';
+                firstNameError.classList.remove('hidden');
+                return false;
+            } else {
+                firstName.classList.remove('border-rose-300', 'bg-rose-50/30');
+                firstName.classList.add('border-emerald-400');
+                firstNameError.classList.add('hidden');
+                return true;
+            }
+        }
+        firstName.addEventListener('input', validateFirstName);
+
+        // Validate Email
+        function validateEmail() {
+            const val = email.value.trim();
+            if (!val) {
+                email.classList.remove('border-emerald-400', 'border-rose-300', 'bg-rose-50/30');
+                emailError.classList.add('hidden');
+                emailIcon.classList.add('hidden');
+                return false;
+            }
+            if (!val.includes('@') && !val.includes('.')) {
+                email.classList.add('border-rose-300', 'bg-rose-50/30');
+                email.classList.remove('border-emerald-400');
+                emailError.textContent = 'Email must contain both "@" and a domain dot "." (e.g. name@example.com).';
+                emailError.className = 'text-[11px] mt-1 block font-semibold text-rose-500';
+                emailIcon.innerHTML = '<i data-lucide="alert-circle" class="w-4 h-4 text-rose-500"></i>';
+                emailIcon.classList.remove('hidden');
+                lucide.createIcons();
+                return false;
+            }
+            if (!val.includes('@')) {
+                email.classList.add('border-rose-300', 'bg-rose-50/30');
+                email.classList.remove('border-emerald-400');
+                emailError.textContent = 'Email must contain "@" (e.g. name@example.com).';
+                emailError.className = 'text-[11px] mt-1 block font-semibold text-rose-500';
+                emailIcon.innerHTML = '<i data-lucide="alert-circle" class="w-4 h-4 text-rose-500"></i>';
+                emailIcon.classList.remove('hidden');
+                lucide.createIcons();
+                return false;
+            }
+            if (!val.includes('.')) {
+                email.classList.add('border-rose-300', 'bg-rose-50/30');
+                email.classList.remove('border-emerald-400');
+                emailError.textContent = 'Email must contain a domain dot "." (e.g. name@example.com).';
+                emailError.className = 'text-[11px] mt-1 block font-semibold text-rose-500';
+                emailIcon.innerHTML = '<i data-lucide="alert-circle" class="w-4 h-4 text-rose-500"></i>';
+                emailIcon.classList.remove('hidden');
+                lucide.createIcons();
+                return false;
+            }
+            if (!isValidEmail(val)) {
+                email.classList.add('border-rose-300', 'bg-rose-50/30');
+                email.classList.remove('border-emerald-400');
+                emailError.textContent = 'Please enter a valid email address (e.g. name@example.com).';
+                emailError.className = 'text-[11px] mt-1 block font-semibold text-rose-500';
+                emailIcon.innerHTML = '<i data-lucide="alert-circle" class="w-4 h-4 text-rose-500"></i>';
+                emailIcon.classList.remove('hidden');
+                lucide.createIcons();
+                return false;
+            }
+
+            email.classList.remove('border-rose-300', 'bg-rose-50/30');
+            email.classList.add('border-emerald-400');
+            emailError.textContent = '✓ Valid email address format';
+            emailError.className = 'text-[11px] mt-1 block font-semibold text-emerald-600';
+            emailIcon.innerHTML = '<i data-lucide="check-circle" class="w-4 h-4 text-emerald-500"></i>';
+            emailIcon.classList.remove('hidden');
+            lucide.createIcons();
+            return true;
+        }
+        email.addEventListener('input', validateEmail);
+        email.addEventListener('blur', () => {
+            if (email.value.trim()) validateEmail();
+        });
+
+        // Validate Mobile (10 digits)
+        function validatePhone() {
+            const raw = phone.value;
+            const digits = extract10Digits(raw);
+            if (phoneCounter) phoneCounter.textContent = `${digits.length}/10 digits`;
+
+            if (!raw.trim()) {
+                phone.classList.remove('border-emerald-400', 'border-rose-300', 'bg-rose-50/30');
+                phoneError.classList.add('hidden');
+                phoneIcon.classList.add('hidden');
+                return false;
+            }
+
+            if (!/^\d+$/.test(digits)) {
+                phone.classList.add('border-rose-300', 'bg-rose-50/30');
+                phone.classList.remove('border-emerald-400');
+                phoneError.textContent = 'Mobile number must contain digits only.';
+                phoneError.className = 'text-[11px] mt-1 block font-semibold text-rose-500';
+                phoneIcon.innerHTML = '<i data-lucide="alert-circle" class="w-4 h-4 text-rose-500"></i>';
+                phoneIcon.classList.remove('hidden');
+                lucide.createIcons();
+                return false;
+            }
+
+            if (digits.length !== 10) {
+                phone.classList.add('border-rose-300', 'bg-rose-50/30');
+                phone.classList.remove('border-emerald-400');
+                phoneError.textContent = `Mobile number must be exactly 10 digits (${digits.length}/10 entered).`;
+                phoneError.className = 'text-[11px] mt-1 block font-semibold text-rose-500';
+                phoneIcon.innerHTML = '<i data-lucide="alert-circle" class="w-4 h-4 text-rose-500"></i>';
+                phoneIcon.classList.remove('hidden');
+                lucide.createIcons();
+                return false;
+            }
+
+            phone.classList.remove('border-rose-300', 'bg-rose-50/30');
+            phone.classList.add('border-emerald-400');
+            phoneError.textContent = '✓ 10-digit mobile number verified';
+            phoneError.className = 'text-[11px] mt-1 block font-semibold text-emerald-600';
+            phoneIcon.innerHTML = '<i data-lucide="check-circle" class="w-4 h-4 text-emerald-500"></i>';
+            phoneIcon.classList.remove('hidden');
+            lucide.createIcons();
+            return true;
+        }
+        phone.addEventListener('input', validatePhone);
+
+        // Validate Password (min 8 characters)
+        function validatePassword() {
+            const val = pass.value;
+            passBar.classList.remove('hidden');
+
+            if (val.length === 0) {
+                if (passCounter) {
+                    passCounter.textContent = 'Min 8 characters';
+                    passCounter.className = 'text-[11px] text-slate-400 font-semibold';
+                }
+                passBar.classList.add('hidden');
+                passError.classList.add('hidden');
+                pass.classList.remove('border-emerald-400', 'border-rose-300', 'bg-rose-50/30');
+                return false;
+            }
+
+            if (val.length < 8) {
+                const pct = Math.min(100, Math.round((val.length / 8) * 60));
+                passFill.style.width = pct + '%';
+                passFill.className = 'h-full bg-rose-500 transition-all duration-300';
+                if (passCounter) {
+                    passCounter.textContent = `${val.length}/8 characters`;
+                    passCounter.className = 'text-[11px] text-rose-500 font-bold';
+                }
+                pass.classList.add('border-rose-300', 'bg-rose-50/30');
+                pass.classList.remove('border-emerald-400');
+                passError.textContent = `Password must be at least 8 characters long (${8 - val.length} more needed).`;
+                passError.className = 'text-[11px] mt-1 block font-semibold text-rose-500';
+                validateConfirm();
+                return false;
+            } else {
+                passFill.style.width = '100%';
+                passFill.className = 'h-full bg-emerald-500 transition-all duration-300';
+                if (passCounter) {
+                    passCounter.textContent = `${val.length} chars (Valid)`;
+                    passCounter.className = 'text-[11px] text-emerald-600 font-bold';
+                }
+                pass.classList.remove('border-rose-300', 'bg-rose-50/30');
+                pass.classList.add('border-emerald-400');
+                passError.textContent = '✓ Password meets length requirement (8+ characters)';
+                passError.className = 'text-[11px] mt-1 block font-semibold text-emerald-600';
+                validateConfirm();
+                return true;
+            }
+        }
+        pass.addEventListener('input', validatePassword);
+
+        // Validate Confirm Password
+        function validateConfirm() {
+            const pVal = pass.value;
+            const cpVal = confirmPass.value;
+
+            if (!cpVal) {
+                confirmPass.classList.remove('border-emerald-400', 'border-rose-300', 'bg-rose-50/30');
+                confirmPassError.classList.add('hidden');
+                confirmMatchText.classList.add('hidden');
+                return false;
+            }
+
+            if (cpVal !== pVal) {
+                confirmPass.classList.add('border-rose-300', 'bg-rose-50/30');
+                confirmPass.classList.remove('border-emerald-400');
+                confirmPassError.textContent = 'Passwords do not match.';
+                confirmPassError.className = 'text-[11px] mt-1 block font-semibold text-rose-500';
+                confirmMatchText.textContent = 'Mismatch';
+                confirmMatchText.className = 'text-[11px] font-bold text-rose-500 block';
+                return false;
+            } else {
+                confirmPass.classList.remove('border-rose-300', 'bg-rose-50/30');
+                confirmPass.classList.add('border-emerald-400');
+                confirmPassError.textContent = '✓ Passwords match perfectly';
+                confirmPassError.className = 'text-[11px] mt-1 block font-semibold text-emerald-600';
+                confirmMatchText.textContent = '✓ Matched';
+                confirmMatchText.className = 'text-[11px] font-bold text-emerald-600 block';
+                return true;
+            }
+        }
+        confirmPass.addEventListener('input', validateConfirm);
+
+        // Pre-validate on load if form_data is present
+        if (email.value) validateEmail();
+        if (phone.value) validatePhone();
+        if (firstName.value) validateFirstName();
+
+        // Form Submit Handler
+        form.addEventListener('submit', (e) => {
+            const isFnValid = validateFirstName();
+            const isEmValid = validateEmail();
+            const isPhValid = validatePhone();
+            const isPwValid = validatePassword();
+            const isCpValid = validateConfirm();
+
+            if (!isFnValid || !isEmValid || !isPhValid || !isPwValid || !isCpValid) {
+                e.preventDefault();
+                // Focus first invalid element
+                if (!isFnValid) firstName.focus();
+                else if (!isEmValid) email.focus();
+                else if (!isPhValid) phone.focus();
+                else if (!isPwValid) pass.focus();
+                else if (!isCpValid) confirmPass.focus();
+                return false;
+            }
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,176 @@
+{% extends 'base.html' %}
+
+{% block title %}Sign In - BookMyTurf {{ current_city|default:'Rajkot' }}{% endblock %}
+
+{% block content %}
+<div class="min-h-[75vh] flex items-center justify-center px-4 py-12">
+    <div class="w-full max-w-md bg-white rounded-3xl p-8 border border-slate-200/80 shadow-xl">
+        <div class="text-center mb-8">
+            <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-brand-600 to-emerald-400 text-white flex items-center justify-center mx-auto mb-3 shadow-md shadow-brand-500/20">
+                <i data-lucide="lock" class="w-6 h-6"></i>
+            </div>
+            <h1 class="text-2xl font-black text-slate-900 tracking-tight">Sign in to your account</h1>
+            <p class="text-xs text-slate-500 mt-1">Book courts and manage your schedule effortlessly</p>
+        </div>
+
+        <form id="loginForm" method="POST" action="{% url 'login' %}" class="space-y-4" novalidate>
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ next }}">
+
+            <div>
+                <div class="flex items-center justify-between mb-1.5">
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-600">Email Address</label>
+                </div>
+                <div class="relative">
+                    <i data-lucide="mail" class="absolute left-3.5 top-3.5 w-4 h-4 text-slate-400"></i>
+                    <input type="text" id="loginEmail" name="email" required placeholder="name@example.com" value="{{ email|default:'' }}"
+                           class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 transition-all">
+                </div>
+                <span id="loginEmailError" class="text-[11px] text-rose-500 mt-1 hidden font-semibold"></span>
+            </div>
+
+            <div>
+                <div class="flex items-center justify-between mb-1.5">
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-600">Password</label>
+                </div>
+                <div class="relative">
+                    <i data-lucide="key" class="absolute left-3.5 top-3.5 w-4 h-4 text-slate-400"></i>
+                    <input type="password" id="loginPassword" name="password" required minlength="8" placeholder="••••••••"
+                           class="w-full pl-10 pr-10 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 transition-all">
+                    <button type="button" onclick="togglePass('loginPassword', this)" class="absolute right-3.5 top-3.5 text-slate-400 hover:text-slate-600 cursor-pointer">
+                        <i data-lucide="eye" class="w-4 h-4"></i>
+                    </button>
+                </div>
+                <span id="loginPassError" class="text-[11px] text-rose-500 mt-1 hidden font-semibold"></span>
+            </div>
+
+            <button type="submit" id="loginSubmitBtn" class="w-full py-3.5 rounded-2xl bg-brand-600 hover:bg-brand-500 text-white font-extrabold text-sm shadow-lg shadow-brand-600/30 transition-all mt-2 cursor-pointer">
+                Sign In
+            </button>
+        </form>
+
+        <div class="mt-8 pt-6 border-t border-slate-100 text-center">
+            <p class="text-xs text-slate-500">
+                Don't have an account yet? 
+                <a href="{% url 'register' %}" class="font-bold text-brand-600 hover:underline">Create Account</a>
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function togglePass(inputId, btn) {
+        const input = document.getElementById(inputId);
+        if (input.type === 'password') {
+            input.type = 'text';
+            btn.innerHTML = '<i data-lucide="eye-off" class="w-4 h-4"></i>';
+        } else {
+            input.type = 'password';
+            btn.innerHTML = '<i data-lucide="eye" class="w-4 h-4"></i>';
+        }
+        lucide.createIcons();
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const form = document.getElementById('loginForm');
+        const emailInput = document.getElementById('loginEmail');
+        const emailError = document.getElementById('loginEmailError');
+        const passInput = document.getElementById('loginPassword');
+        const passError = document.getElementById('loginPassError');
+
+        function validateEmailOrUser() {
+            const val = emailInput.value.trim();
+            if (!val) {
+                emailInput.classList.add('border-rose-300', 'bg-rose-50/30');
+                emailError.textContent = 'Please enter your email.';
+                emailError.classList.remove('hidden');
+                return false;
+            }
+
+            // Allow 'admin' superuser login
+            if (val.toLowerCase() === 'admin') {
+                emailInput.classList.remove('border-rose-300', 'bg-rose-50/30');
+                emailError.classList.add('hidden');
+                return true;
+            }
+
+            // Check for missing '@' and '.'
+            if (!val.includes('@') && !val.includes('.')) {
+                emailInput.classList.add('border-rose-300', 'bg-rose-50/30');
+                emailError.textContent = 'Email must contain both "@" and a domain dot "." (e.g. name@example.com).';
+                emailError.classList.remove('hidden');
+                return false;
+            }
+            if (!val.includes('@')) {
+                emailInput.classList.add('border-rose-300', 'bg-rose-50/30');
+                emailError.textContent = 'Email must contain "@" (e.g. name@example.com).';
+                emailError.classList.remove('hidden');
+                return false;
+            }
+            if (!val.includes('.')) {
+                emailInput.classList.add('border-rose-300', 'bg-rose-50/30');
+                emailError.textContent = 'Email must contain a domain dot "." (e.g. name@example.com).';
+                emailError.classList.remove('hidden');
+                return false;
+            }
+
+            const emailRegex = /^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*\.[a-zA-Z]{2,}$/;
+            if (!emailRegex.test(val)) {
+                emailInput.classList.add('border-rose-300', 'bg-rose-50/30');
+                emailError.textContent = 'Please enter a valid email format (e.g. name@example.com).';
+                emailError.classList.remove('hidden');
+                return false;
+            }
+
+            emailInput.classList.remove('border-rose-300', 'bg-rose-50/30');
+            emailError.classList.add('hidden');
+            return true;
+        }
+
+        function validatePass() {
+            const val = passInput.value;
+            if (!val) {
+                passInput.classList.add('border-rose-300', 'bg-rose-50/30');
+                passError.textContent = 'Please enter your password.';
+                passError.classList.remove('hidden');
+                return false;
+            }
+            if (val.length < 8) {
+                passInput.classList.add('border-rose-300', 'bg-rose-50/30');
+                passError.textContent = `Password must be at least 8 characters long (${val.length}/8 entered).`;
+                passError.classList.remove('hidden');
+                return false;
+            }
+
+            passInput.classList.remove('border-rose-300', 'bg-rose-50/30');
+            passError.classList.add('hidden');
+            return true;
+        }
+
+        emailInput.addEventListener('input', () => {
+            if (!emailError.classList.contains('hidden')) validateEmailOrUser();
+        });
+        emailInput.addEventListener('blur', () => {
+            if (emailInput.value.trim()) validateEmailOrUser();
+        });
+
+        passInput.addEventListener('input', () => {
+            if (!passError.classList.contains('hidden')) validatePass();
+        });
+
+        form.addEventListener('submit', (e) => {
+            const isEmailOk = validateEmailOrUser();
+            const isPassOk = validatePass();
+
+            if (!isEmailOk || !isPassOk) {
+                e.preventDefault();
+                if (!isEmailOk) emailInput.focus();
+                else if (!isPassOk) passInput.focus();
+                return false;
+            }
+        });
+    });
+</script>
+{% endblock %}

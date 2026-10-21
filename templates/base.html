@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-[#f5f5fa]">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}TurfMyShow - Book Sports Turfs, Box Cricket & Arenas in {{ current_city|default:'Rajkot' }}{% endblock %}</title>
+    <!-- Google Fonts: Inter & Plus Jakarta Sans -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        bms: {
+                            red: '#f84464',
+                            redDark: '#e03554',
+                            header: '#333545',
+                            subHeader: '#1f2533',
+                            bg: '#f5f5fa',
+                            card: '#ffffff',
+                            darkCard: '#2b3148',
+                            footer: '#333545',
+                            footerDark: '#222433',
+                            border: '#e8e8ea',
+                        },
+                        brand: {
+                            50: '#fff1f2',
+                            100: '#ffe4e6',
+                            500: '#f84464',
+                            600: '#e03554',
+                            700: '#be123c',
+                            900: '#881337',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'Plus Jakarta Sans', 'system-ui', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .bms-gradient {
+            background: linear-gradient(90deg, #f84464 0%, #ff5e7e 100%);
+        }
+        .scrollbar-none::-webkit-scrollbar { display: none; }
+        .scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
+        .touch-scroll { -webkit-overflow-scrolling: touch; }
+        /* BMS Card hover effect */
+        .bms-poster-card {
+            transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .bms-poster-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px -10px rgba(0, 0, 0, 0.18);
+        }
+    </style>
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="flex flex-col min-h-screen text-slate-800 antialiased selection:bg-[#f84464] selection:text-white overflow-x-hidden bg-[#f5f5fa]">
+
+    <!-- ========================================================================= -->
+    <!-- 1. TOP HEADER NAVIGATION (BookMyShow Iconic Dark Header: #333545) -->
+    <!-- ========================================================================= -->
+    <header class="sticky top-0 z-40 bg-[#333545] border-b border-slate-700/60 text-white shadow-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16 gap-3 sm:gap-6">
+                
+                <!-- Left: BookMyShow Brand Logo -->
+                <div class="flex items-center gap-4 flex-shrink-0">
+                    <a href="{% url 'home' %}" class="flex items-center gap-2 group cursor-pointer" title="BookMyTurf - Book Sports Venues">
+                        <div class="w-9 h-9 rounded-xl bg-[#f84464] flex items-center justify-center text-white shadow-md shadow-rose-900/40 group-hover:scale-105 transition-transform">
+                            <i data-lucide="trophy" class="w-5 h-5 text-white"></i>
+                        </div>
+                        <div class="flex flex-col">
+                            <span class="text-xl sm:text-2xl font-black tracking-tight text-white leading-none">
+                                book<span class="text-[#f84464]">my</span>turf
+                            </span>
+                            <span class="text-[9px] font-bold text-slate-400 tracking-wider uppercase -mt-0.5">
+                                {{ current_city|default:'Rajkot' }} Edition
+                            </span>
+                        </div>
+                    </a>
+                </div>
+
+                <!-- Center: BookMyShow Search Bar -->
+                <div class="hidden md:flex flex-1 max-w-xl mx-2 lg:mx-6">
+                    <form action="{% url 'turf_list' %}" method="GET" class="w-full relative">
+                        <div class="relative flex items-center">
+                            <i data-lucide="search" class="absolute left-3.5 w-4 h-4 text-slate-400 pointer-events-none"></i>
+                            <input type="text" name="q" placeholder="Search for Turfs, Sports, Arenas and Activities in {{ current_city|default:'Rajkot' }}..." value="{{ search_query|default:'' }}" class="w-full pl-10 pr-4 py-2 bg-white text-slate-800 placeholder-slate-400 rounded-md text-xs sm:text-sm font-medium border-0 focus:outline-none focus:ring-2 focus:ring-[#f84464] shadow-inner transition-all">
+                            {% if current_city %}
+                            <input type="hidden" name="city" value="{{ current_city }}">
+                            {% endif %}
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Right: City Selector + User Auth + Hamburger Menu -->
+                <div class="flex items-center gap-2 sm:gap-4">
+                    
+                    <!-- City Selector Button (Opens BookMyShow City Selector Modal) -->
+                    <button id="openCityModalBtn" type="button" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md hover:bg-slate-700/60 text-slate-200 hover:text-white text-xs sm:text-sm font-semibold transition-colors cursor-pointer group" title="Change Location">
+                        <i data-lucide="map-pin" class="w-4 h-4 text-[#f84464] group-hover:scale-110 transition-transform"></i>
+                        <span id="headerCityLabel" class="font-bold tracking-tight">{{ current_city|default:'Rajkot' }}</span>
+                        <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400"></i>
+                    </button>
+
+                    <!-- Authentication / User Actions -->
+                    {% if user.is_authenticated %}
+                        <!-- User Dropdown Menu -->
+                        <div class="relative group">
+                            <button type="button" class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-slate-700/60 text-slate-200 text-xs sm:text-sm font-semibold transition-colors cursor-pointer">
+                                <div class="w-7 h-7 rounded-full bg-[#f84464] text-white flex items-center justify-center font-bold text-xs uppercase overflow-hidden ring-1 ring-white/20">
+                                    {% if user.profile.get_avatar_url %}
+                                        <img src="{{ user.profile.get_avatar_url }}" alt="{{ user.first_name|default:user.username }}" class="w-full h-full object-cover">
+                                    {% else %}
+                                        {{ user.first_name|default:user.username|slice:":1" }}
+                                    {% endif %}
+                                </div>
+                                <span class="hidden sm:inline max-w-[100px] truncate">{{ user.first_name|default:user.username }}</span>
+                                <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400"></i>
+                            </button>
+
+                            <!-- Dropdown Menu -->
+                            <div class="absolute right-0 mt-1 w-56 bg-white rounded-xl shadow-2xl py-2 text-slate-700 border border-slate-100 hidden group-hover:block hover:block z-50 animate-fade-in">
+                                <div class="px-4 py-2 border-b border-slate-100">
+                                    <p class="text-xs text-slate-400 font-semibold uppercase">Signed in as</p>
+                                    <p class="text-sm font-bold text-slate-900 truncate">{{ user.email|default:user.username }}</p>
+                                    <span class="inline-block mt-0.5 px-2 py-0.5 rounded text-[10px] font-extrabold uppercase bg-rose-50 text-[#f84464]">
+                                        {{ user.profile.role_display_name|default:'Player' }}
+                                    </span>
+                                </div>
+
+                                <a href="{% url 'dashboard' %}" class="flex items-center gap-2.5 px-4 py-2 text-xs font-semibold hover:bg-slate-50 hover:text-[#f84464] transition-colors">
+                                    <i data-lucide="calendar" class="w-4 h-4 text-slate-400"></i>
+                                    <span>Your Bookings</span>
+                                </a>
+
+                                <a href="{% url 'ticket' %}" class="flex items-center gap-2.5 px-4 py-2 text-xs font-semibold hover:bg-slate-50 hover:text-[#f84464] transition-colors">
+                                    <i data-lucide="ticket" class="w-4 h-4 text-slate-400"></i>
+                                    <span>Match Ticket Pass</span>
+                                </a>
+
+                                <a href="{% url 'profile' %}" class="flex items-center gap-2.5 px-4 py-2 text-xs font-semibold hover:bg-slate-50 hover:text-[#f84464] transition-colors">
+                                    <i data-lucide="user" class="w-4 h-4 text-slate-400"></i>
+                                    <span>Account & Profile</span>
+                                </a>
+
+                                <!-- Role-based admin panels -->
+                                {% if user.is_superuser or user.profile.role == 'SUPER_ADMIN' %}
+                                    <a href="{% url 'super_admin_dashboard' %}" class="flex items-center gap-2.5 px-4 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 transition-colors">
+                                        <i data-lucide="shield" class="w-4 h-4 text-rose-500"></i>
+                                        <span>Super Admin Portal</span>
+                                    </a>
+                                {% elif user.profile.role == 'ORG_ADMIN' %}
+                                    <a href="{% url 'org_admin_dashboard' %}" class="flex items-center gap-2.5 px-4 py-2 text-xs font-bold text-indigo-600 hover:bg-indigo-50 transition-colors">
+                                        <i data-lucide="briefcase" class="w-4 h-4 text-indigo-500"></i>
+                                        <span>Organization Admin</span>
+                                    </a>
+                                {% elif user.profile.role == 'MANAGER' or user.profile.role == 'STAFF' %}
+                                    <a href="{% url 'staff_portal' %}" class="flex items-center gap-2.5 px-4 py-2 text-xs font-bold text-emerald-600 hover:bg-emerald-50 transition-colors">
+                                        <i data-lucide="shield-check" class="w-4 h-4 text-emerald-500"></i>
+                                        <span>Staff Operations Desk</span>
+                                    </a>
+                                {% endif %}
+
+                                <div class="border-t border-slate-100 mt-1 pt-1">
+                                    <a href="{% url 'logout' %}" class="flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 transition-colors">
+                                        <i data-lucide="log-out" class="w-4 h-4 text-rose-500"></i>
+                                        <span>Sign Out</span>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    {% else %}
+                        <!-- Sign In Button (BMS Red) -->
+                        <a href="{% url 'login' %}" class="px-4 py-1.5 rounded bg-[#f84464] hover:bg-[#e03554] text-white text-xs sm:text-sm font-bold shadow-sm transition-all cursor-pointer">
+                            Sign In
+                        </a>
+                    {% endif %}
+
+                    <!-- Hamburger Menu Toggle (Opens Side Drawer) -->
+                    <button id="mobileMenuBtn" type="button" aria-label="Open BookMyShow menu" class="p-2 rounded-md hover:bg-slate-700/60 text-slate-200 hover:text-white cursor-pointer transition-colors">
+                        <i data-lucide="menu" class="w-5 h-5"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Search Bar (Visible on mobile screens) -->
+        <div class="md:hidden px-4 pb-3 pt-1 border-t border-slate-700/40">
+            <form action="{% url 'turf_list' %}" method="GET" class="w-full">
+                <div class="relative flex items-center">
+                    <i data-lucide="search" class="absolute left-3 w-4 h-4 text-slate-400"></i>
+                    <input type="text" name="q" placeholder="Search turfs in {{ current_city|default:'Rajkot' }}..." value="{{ search_query|default:'' }}" class="w-full pl-9 pr-3 py-2 bg-white text-slate-800 placeholder-slate-400 rounded-md text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#f84464]">
+                    {% if current_city %}
+                    <input type="hidden" name="city" value="{{ current_city }}">
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+    </header>
+
+    <!-- ========================================================================= -->
+    <!-- 2. SECONDARY SUB-HEADER (BookMyShow Blue-Gray Bar: #1f2533) -->
+    <!-- ========================================================================= -->
+    <nav class="bg-[#1f2533] text-slate-300 text-xs font-medium border-b border-slate-800 overflow-x-auto scrollbar-none">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-10 gap-6 whitespace-nowrap">
+                
+                <!-- Left Categories -->
+                <div class="flex items-center gap-5 sm:gap-7">
+                    <a href="{% url 'turf_list' %}" class="hover:text-white font-semibold transition-colors flex items-center gap-1.5 {% if request.resolver_match.url_name == 'turf_list' %}text-white font-bold{% endif %}">
+                        <span>Turfs & Venues</span>
+                    </a>
+                    <a href="{% url 'turf_list' %}?sport=cricket" class="hover:text-white transition-colors">
+                        <span>Box Cricket</span>
+                    </a>
+                    <a href="{% url 'turf_list' %}?sport=football" class="hover:text-white transition-colors">
+                        <span>Football Grounds</span>
+                    </a>
+                    <a href="{% url 'turf_list' %}?sport=pickleball" class="hover:text-white transition-colors">
+                        <span>Pickleball Courts</span>
+                    </a>
+                    <a href="{% url 'sports_list' %}" class="hover:text-white transition-colors">
+                        <span>Sports Directory</span>
+                    </a>
+                    <a href="{% url 'ticket' %}" class="hover:text-white transition-colors flex items-center gap-1">
+                        <i data-lucide="ticket" class="w-3.5 h-3.5 text-[#f84464]"></i>
+                        <span>Match Pass</span>
+                    </a>
+                </div>
+
+                <!-- Right Sub-Links -->
+                <div class="hidden lg:flex items-center gap-5 text-slate-400">
+                    <a href="{% if user.is_authenticated and user.profile.role == 'ORG_ADMIN' %}{% url 'org_admin_dashboard' %}{% else %}{% url 'register' %}{% endif %}" class="hover:text-white transition-colors flex items-center gap-1 text-[11px] font-semibold text-rose-300 hover:text-white">
+                        <i data-lucide="badge-plus" class="w-3.5 h-3.5 text-[#f84464]"></i>
+                        <span>ListYourTurf</span>
+                    </a>
+                    <a href="{% url 'dashboard' %}" class="hover:text-white transition-colors text-[11px]">
+                        <span>My Bookings</span>
+                    </a>
+                    <span class="text-slate-600">|</span>
+                    <span class="text-[11px] text-slate-400">Instant Confirmation Guarantee</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Global Flash Messages / Toast Alerts -->
+    {% if messages %}
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 w-full">
+        {% for message in messages %}
+        <div class="flex items-center justify-between p-3.5 mb-2.5 rounded-xl border {% if message.tags == 'success' %}bg-emerald-50 border-emerald-200 text-emerald-800{% elif message.tags == 'error' %}bg-rose-50 border-rose-200 text-rose-800{% elif message.tags == 'warning' %}bg-amber-50 border-amber-200 text-amber-800{% else %}bg-blue-50 border-blue-200 text-blue-800{% endif %} shadow-sm text-xs sm:text-sm">
+            <div class="flex items-center gap-2.5">
+                <i data-lucide="{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}alert-circle{% elif message.tags == 'warning' %}alert-triangle{% else %}info{% endif %}" class="w-4 h-4 flex-shrink-0"></i>
+                <p class="font-medium">{{ message }}</p>
+            </div>
+            <button onclick="this.parentElement.remove()" class="text-slate-400 hover:text-slate-600 p-1">
+                <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- ========================================================================= -->
+    <!-- MAIN CONTENT INJECTION -->
+    <!-- ========================================================================= -->
+    <main class="flex-grow">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- ========================================================================= -->
+    <!-- 3. BOOKMYSHOW CITY SELECTOR MODAL (Interactive Location Popup) -->
+    <!-- ========================================================================= -->
+    <div id="citySelectorModal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4 transition-opacity">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[85vh] flex flex-col overflow-hidden border border-slate-200 transform scale-95 transition-transform duration-200" id="cityModalCard">
+            
+            <!-- Modal Header -->
+            <div class="p-5 border-b border-slate-100 flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-lg bg-rose-50 text-[#f84464] flex items-center justify-center font-bold">
+                        <i data-lucide="map-pin" class="w-4 h-4"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-extrabold text-slate-900">Select Your City</h3>
+                        <p class="text-xs text-slate-500">Currently browsing in: <span class="font-bold text-[#f84464]">{{ current_city|default:'Rajkot' }}</span></p>
+                    </div>
+                </div>
+                <button type="button" id="closeCityModalBtn" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <!-- Search City Input -->
+            <div class="p-5 border-b border-slate-100 bg-slate-50">
+                <div class="relative flex items-center">
+                    <i data-lucide="search" class="absolute left-3.5 w-4 h-4 text-slate-400"></i>
+                    <input type="text" id="citySearchInput" placeholder="Search for your city (e.g. Rajkot, Ahmedabad, Surat, Mumbai...)" class="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#f84464] focus:border-transparent transition-all">
+                </div>
+                <!-- Detect Location Button -->
+                <button type="button" id="detectLocationBtn" class="mt-3 flex items-center gap-2 text-xs font-bold text-[#f84464] hover:text-[#e03554] transition-colors cursor-pointer">
+                    <i data-lucide="crosshair" class="w-3.5 h-3.5"></i>
+                    <span>Detect my location</span>
+                </button>
+            </div>
+
+            <!-- Modal Body (Popular Cities + Alphabetical Cities) -->
+            <div class="p-5 overflow-y-auto flex-1 space-y-6">
+                <!-- Popular Cities Grid -->
+                <div>
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">Popular Cities</h4>
+                    <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
+                        {% for c in popular_cities %}
+                        <a href="{% url 'set_city' c.name %}?next={{ request.path }}" class="city-pill group flex flex-col items-center justify-center p-3 rounded-xl border {% if c.name|lower == current_city|lower %}border-[#f84464] bg-rose-50/60 ring-2 ring-[#f84464]/20{% else %}border-slate-200 hover:border-[#f84464] hover:bg-slate-50{% endif %} transition-all text-center">
+                            <div class="w-9 h-9 rounded-full bg-slate-100 group-hover:bg-[#f84464] group-hover:text-white text-slate-700 flex items-center justify-center mb-1.5 transition-colors">
+                                <i data-lucide="{{ c.icon|default:'map-pin' }}" class="w-4 h-4"></i>
+                            </div>
+                            <span class="text-xs font-bold text-slate-800 group-hover:text-[#f84464] transition-colors">{{ c.name }}</span>
+                            {% if c.name|lower == current_city|lower %}
+                            <span class="text-[9px] font-bold text-[#f84464]">Selected</span>
+                            {% endif %}
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- All Cities Quick List -->
+                <div>
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">All Cities</h4>
+                    <div id="allCitiesContainer" class="flex flex-wrap gap-2">
+                        {% for city_name in all_cities_list %}
+                        <a href="{% url 'set_city' city_name %}?next={{ request.path }}" data-city-name="{{ city_name|lower }}" class="city-tag px-3 py-1.5 rounded-lg border text-xs font-semibold {% if city_name|lower == current_city|lower %}bg-[#f84464] text-white border-[#f84464]{% else %}bg-slate-50 border-slate-200 text-slate-700 hover:border-[#f84464] hover:text-[#f84464] hover:bg-white{% endif %} transition-colors">
+                            {{ city_name }}
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="p-3.5 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+                <span>Location can be changed anytime from the top bar</span>
+                <a href="{% url 'turf_list' %}?all_cities=1" class="text-xs font-bold text-[#f84464] hover:underline">
+                    View Turfs in All Cities →
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- 4. BOOKMYSHOW RIGHT SLIDE-OUT DRAWER MENU (Hamburger Menu) -->
+    <!-- ========================================================================= -->
+    <div id="sideDrawerBackdrop" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs hidden transition-opacity"></div>
+    <aside id="sideDrawer" class="fixed top-0 right-0 bottom-0 z-50 w-full sm:w-96 bg-white shadow-2xl transform translate-x-full transition-transform duration-300 ease-in-out flex flex-col overflow-y-auto">
+        
+        <!-- Drawer Top User Card -->
+        <div class="bg-[#333545] p-6 text-white flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-12 h-12 rounded-full bg-[#f84464] text-white flex items-center justify-center font-black text-lg overflow-hidden ring-2 ring-white/20">
+                    {% if user.is_authenticated and user.profile.get_avatar_url %}
+                        <img src="{{ user.profile.get_avatar_url }}" alt="{{ user.first_name|default:user.username }}" class="w-full h-full object-cover">
+                    {% elif user.is_authenticated %}
+                        {{ user.first_name|default:user.username|slice:":1" }}
+                    {% else %}
+                        <i data-lucide="user" class="w-6 h-6"></i>
+                    {% endif %}
+                </div>
+                <div>
+                    {% if user.is_authenticated %}
+                        <h4 class="text-base font-extrabold leading-tight">Hey, {{ user.first_name|default:user.username }}!</h4>
+                        <p class="text-xs text-slate-400">{{ user.email|default:user.username }}</p>
+                    {% else %}
+                        <h4 class="text-base font-extrabold leading-tight">Hey!</h4>
+                        <a href="{% url 'login' %}" class="inline-block mt-1 text-xs font-bold text-[#f84464] hover:underline">Sign In / Register</a>
+                    {% endif %}
+                </div>
+            </div>
+            <button id="closeDrawerBtn" type="button" class="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700/60 transition-colors cursor-pointer">
+                <i data-lucide="x" class="w-6 h-6"></i>
+            </button>
+        </div>
+
+        <!-- Drawer Content Links -->
+        <div id="mobileMenu" class="p-4 space-y-6 flex-1 text-sm text-slate-700">
+            
+            <!-- Quick Location Tag -->
+            <div class="p-3 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between">
+                <div class="flex items-center gap-2 text-xs text-slate-600">
+                    <i data-lucide="map-pin" class="w-4 h-4 text-[#f84464]"></i>
+                    <span>Selected City: <strong class="text-slate-900">{{ current_city|default:'Rajkot' }}</strong></span>
+                </div>
+                <button onclick="document.getElementById('sideDrawerBackdrop').click(); document.getElementById('openCityModalBtn').click();" class="text-xs font-bold text-[#f84464] hover:underline cursor-pointer">
+                    Change
+                </button>
+            </div>
+
+            <!-- Booking & Passes Section -->
+            <div>
+                <h5 class="text-[11px] font-extrabold uppercase tracking-wider text-slate-400 mb-2">My Activity</h5>
+                <div class="space-y-1">
+                    <a href="{% url 'dashboard' %}" class="flex items-center justify-between px-3.5 py-2.5 rounded-xl hover:bg-slate-50 font-medium hover:text-[#f84464] transition-colors">
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="calendar" class="w-4 h-4 text-slate-400"></i>
+                            <span>Your Bookings</span>
+                        </div>
+                        <i data-lucide="chevron-right" class="w-4 h-4 text-slate-300"></i>
+                    </a>
+                    <a href="{% url 'ticket' %}" class="flex items-center justify-between px-3.5 py-2.5 rounded-xl hover:bg-slate-50 font-medium hover:text-[#f84464] transition-colors">
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="ticket" class="w-4 h-4 text-[#f84464]"></i>
+                            <span>Match Ticket Passes</span>
+                        </div>
+                        <i data-lucide="chevron-right" class="w-4 h-4 text-slate-300"></i>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Explore Section -->
+            <div>
+                <h5 class="text-[11px] font-extrabold uppercase tracking-wider text-slate-400 mb-2">Explore Sports & Turfs</h5>
+                <div class="space-y-1">
+                    <a href="{% url 'turf_list' %}" class="flex items-center justify-between px-3.5 py-2.5 rounded-xl hover:bg-slate-50 font-medium hover:text-[#f84464] transition-colors">
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="layout-grid" class="w-4 h-4 text-slate-400"></i>
+                            <span>All Turfs in {{ current_city|default:'Rajkot' }}</span>
+                        </div>
+                        <i data-lucide="chevron-right" class="w-4 h-4 text-slate-300"></i>
+                    </a>
+                    <a href="{% url 'sports_list' %}" class="flex items-center justify-between px-3.5 py-2.5 rounded-xl hover:bg-slate-50 font-medium hover:text-[#f84464] transition-colors">
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="trophy" class="w-4 h-4 text-slate-400"></i>
+                            <span>Sports Directory</span>
+                        </div>
+                        <i data-lucide="chevron-right" class="w-4 h-4 text-slate-300"></i>
+                    </a>
+                    <a href="{% url 'turf_list' %}?sport=cricket" class="flex items-center justify-between px-3.5 py-2.5 rounded-xl hover:bg-slate-50 font-medium hover:text-[#f84464] transition-colors">
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="target" class="w-4 h-4 text-slate-400"></i>
+                            <span>Box Cricket Arenas</span>
+                        </div>
+                        <i data-lucide="chevron-right" class="w-4 h-4 text-slate-300"></i>
+                    </a>
+                    <a href="{% url 'turf_list' %}?sport=football" class="flex items-center justify-between px-3.5 py-2.5 rounded-xl hover:bg-slate-50 font-medium hover:text-[#f84464] transition-colors">
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="flag" class="w-4 h-4 text-slate-400"></i>
+                            <span>Football 5-a-side</span>
+                        </div>
+                        <i data-lucide="chevron-right" class="w-4 h-4 text-slate-300"></i>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Operations & Admin Desk (Role-Based) -->
+            {% if user.is_authenticated %}
+                {% if user.is_superuser or user.profile.role == 'SUPER_ADMIN' or user.profile.role == 'ORG_ADMIN' or user.profile.role == 'MANAGER' or user.profile.role == 'STAFF' %}
+                <div>
+                    <h5 class="text-[11px] font-extrabold uppercase tracking-wider text-slate-400 mb-2">Operations & Admin</h5>
+                    <div class="space-y-1">
+                        {% if user.is_superuser or user.profile.role == 'SUPER_ADMIN' %}
+                        <a href="{% url 'super_admin_dashboard' %}" class="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-rose-50 text-rose-700 font-bold hover:bg-rose-100 transition-colors">
+                            <div class="flex items-center gap-3">
+                                <i data-lucide="shield" class="w-4 h-4 text-rose-600"></i>
+                                <span>Super Admin Panel</span>
+                            </div>
+                            <i data-lucide="chevron-right" class="w-4 h-4 text-rose-400"></i>
+                        </a>
+                        {% elif user.profile.role == 'ORG_ADMIN' %}
+                        <a href="{% url 'org_admin_dashboard' %}" class="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-indigo-50 text-indigo-700 font-bold hover:bg-indigo-100 transition-colors">
+                            <div class="flex items-center gap-3">
+                                <i data-lucide="briefcase" class="w-4 h-4 text-indigo-600"></i>
+                                <span>Organization Admin Desk</span>
+                            </div>
+                            <i data-lucide="chevron-right" class="w-4 h-4 text-indigo-400"></i>
+                        </a>
+                        {% elif user.profile.role == 'MANAGER' or user.profile.role == 'STAFF' %}
+                        <a href="{% url 'staff_portal' %}" class="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-emerald-50 text-emerald-700 font-bold hover:bg-emerald-100 transition-colors">
+                            <div class="flex items-center gap-3">
+                                <i data-lucide="shield-check" class="w-4 h-4 text-emerald-600"></i>
+                                <span>Staff Operations Desk</span>
+                            </div>
+                            <i data-lucide="chevron-right" class="w-4 h-4 text-emerald-400"></i>
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Account & Settings -->
+                <div>
+                    <h5 class="text-[11px] font-extrabold uppercase tracking-wider text-slate-400 mb-2">Settings</h5>
+                    <div class="space-y-1">
+                        <a href="{% url 'profile' %}" class="flex items-center justify-between px-3.5 py-2.5 rounded-xl hover:bg-slate-50 font-medium transition-colors">
+                            <div class="flex items-center gap-3">
+                                <i data-lucide="user" class="w-4 h-4 text-slate-400"></i>
+                                <span>Profile Details</span>
+                            </div>
+                            <i data-lucide="chevron-right" class="w-4 h-4 text-slate-300"></i>
+                        </a>
+                        <a href="{% url 'change_password' %}" class="flex items-center justify-between px-3.5 py-2.5 rounded-xl hover:bg-slate-50 font-medium transition-colors">
+                            <div class="flex items-center gap-3">
+                                <i data-lucide="lock" class="w-4 h-4 text-slate-400"></i>
+                                <span>Change Password</span>
+                            </div>
+                            <i data-lucide="chevron-right" class="w-4 h-4 text-slate-300"></i>
+                        </a>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Drawer Bottom Action -->
+        <div class="p-4 border-t border-slate-100 bg-slate-50">
+            {% if user.is_authenticated %}
+                <a href="{% url 'logout' %}" class="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl font-bold text-rose-600 hover:bg-rose-50 transition-colors text-xs">
+                    <i data-lucide="log-out" class="w-4 h-4"></i>
+                    <span>Sign Out</span>
+                </a>
+            {% else %}
+                <div class="flex gap-2">
+                    <a href="{% url 'login' %}" class="flex-1 text-center py-2.5 rounded-xl font-bold border border-slate-300 text-slate-700 hover:bg-slate-100 text-xs transition-colors">
+                        Sign In
+                    </a>
+                    <a href="{% url 'register' %}" class="flex-1 text-center py-2.5 rounded-xl font-bold bg-[#f84464] text-white hover:bg-[#e03554] text-xs transition-colors shadow-sm">
+                        Create Account
+                    </a>
+                </div>
+            {% endif %}
+            <p class="text-[10px] text-center text-slate-400 mt-3">BookMyTurf &copy; {% now "Y" %} - All Rights Reserved</p>
+        </div>
+    </aside>
+
+    <!-- ========================================================================= -->
+    <!-- 5. BOOKMYSHOW ICONIC DARK FOOTER (#333545 & #222433) -->
+    <!-- ========================================================================= -->
+    <footer class="bg-[#333545] text-slate-300 mt-20 border-t border-slate-700">
+        
+        <!-- List Your Show / Turf Top Banner -->
+        <div class="bg-[#2b3148] border-b border-slate-700/80 py-6 px-4 sm:px-6 lg:px-8">
+            <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div class="flex items-center gap-3.5 text-center sm:text-left">
+                    <div class="w-10 h-10 rounded-xl bg-[#f84464] flex items-center justify-center text-white flex-shrink-0 shadow-md">
+                        <i data-lucide="sparkles" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h4 class="text-sm sm:text-base font-extrabold text-white">List your turf with us!</h4>
+                        <p class="text-xs text-slate-300">Got a sports arena or turf ground in {{ current_city|default:'Rajkot' }}? Partner with TurfMyShow to maximize bookings.</p>
+                    </div>
+                </div>
+                <a href="{% if user.is_authenticated and user.profile.role == 'ORG_ADMIN' %}{% url 'org_admin_dashboard' %}{% else %}{% url 'register' %}{% endif %}" class="px-5 py-2.5 rounded-md bg-[#f84464] hover:bg-[#e03554] text-white font-bold text-xs shadow-md transition-all whitespace-nowrap cursor-pointer">
+                    Contact Today / List Turf
+                </a>
+            </div>
+        </div>
+
+        <!-- 3 Assurances Row -->
+        <div class="bg-[#1f2533] border-b border-slate-800 py-6 px-4 sm:px-6 lg:px-8">
+            <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6 text-center md:text-left">
+                <div class="flex items-center justify-center md:justify-start gap-3">
+                    <div class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-[#f84464]">
+                        <i data-lucide="headphones" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h5 class="text-xs font-bold text-white uppercase tracking-wider">24/7 Customer Care</h5>
+                        <p class="text-xs text-slate-400">Assistance for slot adjustments & support</p>
+                    </div>
+                </div>
+                <div class="flex items-center justify-center md:justify-start gap-3">
+                    <div class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-[#f84464]">
+                        <i data-lucide="ticket" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h5 class="text-xs font-bold text-white uppercase tracking-wider">Resend Booking Pass</h5>
+                        <p class="text-xs text-slate-400">Instant digital ticket pass with QR code</p>
+                    </div>
+                </div>
+                <div class="flex items-center justify-center md:justify-start gap-3">
+                    <div class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-[#f84464]">
+                        <i data-lucide="shield-check" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h5 class="text-xs font-bold text-white uppercase tracking-wider">100% Genuine Slot Lock</h5>
+                        <p class="text-xs text-slate-400">Zero double-booking guarantee on all arenas</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Directory Links -->
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-8 text-xs">
+                
+                <!-- Col 1: Turfs By Popular Cities -->
+                <div>
+                    <h5 class="font-bold text-white uppercase tracking-wider mb-3">Turfs in Cities</h5>
+                    <ul class="space-y-2 text-slate-400">
+                        <li><a href="{% url 'set_city' 'Rajkot' %}" class="hover:text-white transition-colors">Turfs in Rajkot</a></li>
+                        <li><a href="{% url 'set_city' 'Ahmedabad' %}" class="hover:text-white transition-colors">Turfs in Ahmedabad</a></li>
+                        <li><a href="{% url 'set_city' 'Surat' %}" class="hover:text-white transition-colors">Turfs in Surat</a></li>
+                        <li><a href="{% url 'set_city' 'Vadodara' %}" class="hover:text-white transition-colors">Turfs in Vadodara</a></li>
+                        <li><a href="{% url 'set_city' 'Mumbai' %}" class="hover:text-white transition-colors">Turfs in Mumbai</a></li>
+                    </ul>
+                </div>
+
+                <!-- Col 2: Sports Categories -->
+                <div>
+                    <h5 class="font-bold text-white uppercase tracking-wider mb-3">Sports Categories</h5>
+                    <ul class="space-y-2 text-slate-400">
+                        <li><a href="{% url 'turf_list' %}?sport=cricket" class="hover:text-white transition-colors">Box Cricket Grounds</a></li>
+                        <li><a href="{% url 'turf_list' %}?sport=football" class="hover:text-white transition-colors">Football 5s & 7s</a></li>
+                        <li><a href="{% url 'turf_list' %}?sport=pickleball" class="hover:text-white transition-colors">Pickleball Courts</a></li>
+                        <li><a href="{% url 'turf_list' %}?sport=paddleball" class="hover:text-white transition-colors">Paddleball Enclosures</a></li>
+                        <li><a href="{% url 'sports_list' %}" class="hover:text-white transition-colors">All Sports Directory</a></li>
+                    </ul>
+                </div>
+
+                <!-- Col 3: Popular Rajkot & Gujarat Hubs -->
+                <div>
+                    <h5 class="font-bold text-white uppercase tracking-wider mb-3">Popular {{ current_city|default:'Rajkot' }} Hubs</h5>
+                    <ul class="space-y-2 text-slate-400">
+                        <li><a href="{% url 'turf_list' %}?q=Kalawad" class="hover:text-white transition-colors">Kalawad Road Venues</a></li>
+                        <li><a href="{% url 'turf_list' %}?q=Race+Course" class="hover:text-white transition-colors">Race Course Arenas</a></li>
+                        <li><a href="{% url 'turf_list' %}?q=Ring+Road" class="hover:text-white transition-colors">150ft Ring Road Courts</a></li>
+                        <li><a href="{% url 'turf_list' %}?q=University" class="hover:text-white transition-colors">University Road Sports</a></li>
+                        <li><a href="{% url 'turf_list' %}?q=Nana+Mava" class="hover:text-white transition-colors">Nana Mava Complex</a></li>
+                    </ul>
+                </div>
+
+                <!-- Col 4: Platform & Help -->
+                <div>
+                    <h5 class="font-bold text-white uppercase tracking-wider mb-3">Quick Navigation</h5>
+                    <ul class="space-y-2 text-slate-400">
+                        <li><a href="{% url 'home' %}" class="hover:text-white transition-colors">Home</a></li>
+                        <li><a href="{% url 'ticket' %}" class="hover:text-white transition-colors">Match Ticket Passes</a></li>
+                        <li><a href="{% url 'dashboard' %}" class="hover:text-white transition-colors">My Bookings</a></li>
+                        <li><a href="{% url 'profile' %}" class="hover:text-white transition-colors">My Profile</a></li>
+                        <li><a href="{% url 'login' %}" class="hover:text-white transition-colors">Sign In / Register</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Bottom Disclaimer & Logo -->
+            <div class="mt-12 pt-8 border-t border-slate-700/60 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-slate-400">
+                <div class="flex items-center gap-2">
+                    <div class="w-6 h-6 rounded-md bg-[#f84464] flex items-center justify-center text-white font-bold text-xs">
+                        <i data-lucide="trophy" class="w-3.5 h-3.5"></i>
+                    </div>
+                    <span class="font-bold text-white">book<span class="text-[#f84464]">my</span>turf</span>
+                    <span class="text-slate-500">• Inspired by BookMyShow Experience</span>
+                </div>
+                <p>&copy; {% now "Y" %} TurfMyShow {{ current_city|default:'Rajkot' }}. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- ========================================================================= -->
+    <!-- INTERACTIVE JAVASCRIPT: ICONS, MODAL & DRAWER TOGGLES -->
+    <!-- ========================================================================= -->
+    <script>
+        // Initialize Lucide Icons
+        if (window.lucide) {
+            lucide.createIcons();
+        }
+
+        // 1. BookMyShow City Selector Modal Logic
+        const cityModal = document.getElementById('citySelectorModal');
+        const cityModalCard = document.getElementById('cityModalCard');
+        const openCityModalBtn = document.getElementById('openCityModalBtn');
+        const closeCityModalBtn = document.getElementById('closeCityModalBtn');
+        const citySearchInput = document.getElementById('citySearchInput');
+        const allCitiesContainer = document.getElementById('allCitiesContainer');
+
+        function openCityModal() {
+            if (!cityModal) return;
+            cityModal.classList.remove('hidden');
+            setTimeout(() => {
+                if (cityModalCard) {
+                    cityModalCard.classList.remove('scale-95');
+                    cityModalCard.classList.add('scale-100');
+                }
+                if (citySearchInput) {
+                    citySearchInput.focus();
+                }
+            }, 10);
+        }
+
+        function closeCityModal() {
+            if (!cityModal) return;
+            if (cityModalCard) {
+                cityModalCard.classList.remove('scale-100');
+                cityModalCard.classList.add('scale-95');
+            }
+            setTimeout(() => {
+                cityModal.classList.add('hidden');
+            }, 150);
+        }
+
+        if (openCityModalBtn) openCityModalBtn.addEventListener('click', openCityModal);
+        if (closeCityModalBtn) closeCityModalBtn.addEventListener('click', closeCityModal);
+
+        if (cityModal) {
+            cityModal.addEventListener('click', (e) => {
+                if (e.target === cityModal) closeCityModal();
+            });
+        }
+
+        // Live Search Filter for Cities inside Modal
+        if (citySearchInput && allCitiesContainer) {
+            citySearchInput.addEventListener('input', (e) => {
+                const query = e.target.value.toLowerCase().trim();
+                const tags = allCitiesContainer.querySelectorAll('.city-tag');
+                tags.forEach(tag => {
+                    const cityName = tag.getAttribute('data-city-name') || '';
+                    if (cityName.includes(query)) {
+                        tag.style.display = '';
+                    } else {
+                        tag.style.display = 'none';
+                    }
+                });
+            });
+        }
+
+        // Geolocation: Detect My Location
+        const detectLocationBtn = document.getElementById('detectLocationBtn');
+        if (detectLocationBtn) {
+            detectLocationBtn.addEventListener('click', () => {
+                detectLocationBtn.innerHTML = '<span class="inline-block animate-spin mr-1">⌛</span> Detecting...';
+                if ("geolocation" in navigator) {
+                    navigator.geolocation.getCurrentPosition(
+                        (position) => {
+                            // Default to Rajkot or closest Gujarati hub
+                            window.location.href = "{% url 'set_city' 'Rajkot' %}?next={{ request.path }}";
+                        },
+                        (error) => {
+                            alert("Location access denied or unavailable. Please choose your city from the list.");
+                            detectLocationBtn.innerHTML = '<i data-lucide="crosshair" class="w-3.5 h-3.5"></i> <span>Detect my location</span>';
+                            if (window.lucide) lucide.createIcons();
+                        }
+                    );
+                } else {
+                    alert("Geolocation is not supported by your browser.");
+                    detectLocationBtn.innerHTML = '<i data-lucide="crosshair" class="w-3.5 h-3.5"></i> <span>Detect my location</span>';
+                    if (window.lucide) lucide.createIcons();
+                }
+            });
+        }
+
+        // 2. BookMyShow Side Drawer Logic
+        const sideDrawer = document.getElementById('sideDrawer');
+        const sideDrawerBackdrop = document.getElementById('sideDrawerBackdrop');
+        const openDrawerBtn = document.getElementById('mobileMenuBtn') || document.getElementById('openDrawerBtn');
+        const closeDrawerBtn = document.getElementById('closeDrawerBtn');
+
+        function openDrawer() {
+            if (!sideDrawer || !sideDrawerBackdrop) return;
+            sideDrawerBackdrop.classList.remove('hidden');
+            setTimeout(() => {
+                sideDrawer.classList.remove('translate-x-full');
+            }, 10);
+        }
+
+        function closeDrawer() {
+            if (!sideDrawer || !sideDrawerBackdrop) return;
+            sideDrawer.classList.add('translate-x-full');
+            setTimeout(() => {
+                sideDrawerBackdrop.classList.add('hidden');
+            }, 300);
+        }
+
+        if (openDrawerBtn) openDrawerBtn.addEventListener('click', openDrawer);
+        if (closeDrawerBtn) closeDrawerBtn.addEventListener('click', closeDrawer);
+        if (sideDrawerBackdrop) sideDrawerBackdrop.addEventListener('click', closeDrawer);
+
+        // Global Escape Key Listener
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeCityModal();
+                closeDrawer();
+            }
+        });
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

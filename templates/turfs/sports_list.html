@@ -1,0 +1,364 @@
+{% extends 'base.html' %}
+
+{% block title %}
+{% if active_sport_obj %}
+{{ active_sport_obj.name }} Turfs & Grounds in {{ current_city|default:'Rajkot' }} - BookMyTurf
+{% else %}
+All Sports & Turfs in {{ current_city|default:'Rajkot' }} - BookMyTurf
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<!-- Sports Header Hero -->
+<div class="bg-gradient-to-b from-[#1f2533] via-[#333545] to-[#1f2533] py-12 text-white border-b border-slate-800 relative overflow-hidden">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-rose-500/10 border border-rose-500/20 text-[#f84464] text-xs font-bold mb-3 uppercase tracking-wider">
+            <i data-lucide="trophy" class="w-3.5 h-3.5"></i> All Sports in {{ current_city|default:'Rajkot' }}
+        </div>
+        <h1 id="heroTitle" class="text-3xl sm:text-5xl font-black tracking-tight text-white">
+            {% if active_sport_obj %}
+            {{ active_sport_obj.name }} <span class="text-[#f84464]">Turfs & Courts</span>
+            {% else %}
+            Explore By <span class="text-[#f84464]">Sport Category</span>
+            {% endif %}
+        </h1>
+        <p class="mt-3 text-slate-300 text-sm sm:text-base max-w-2xl leading-relaxed">
+            Choose your game to see verified synthetic pitches, indoor air-conditioned arenas, and tournament-grade venues across {{ current_city|default:'Rajkot' }}.
+        </p>
+
+        <!-- Quick Horizontal Sport Filter Pills (Scrollable on phones/tablets) -->
+        <div id="quickSportPills" class="mt-6 sm:mt-8 flex overflow-x-auto pb-2 scrollbar-none touch-scroll flex-nowrap sm:flex-wrap items-center gap-2.5 pt-2 border-t border-slate-800/80 -mx-4 px-4 sm:mx-0 sm:px-0">
+            <button type="button"
+               onclick="selectSportFilter(event, '')"
+               data-sport=""
+               class="sport-pill-btn shrink-0 sm:shrink px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer {% if not selected_sport %}bg-brand-600 text-white shadow-lg shadow-brand-600/30 ring-2 ring-brand-500/50{% else %}bg-slate-800/90 text-slate-300 hover:bg-slate-700 hover:text-white border border-slate-700/80{% endif %}">
+                <i data-lucide="layout-grid" class="w-3.5 h-3.5"></i>
+                <span>All Sports ({{ total_all_turfs }})</span>
+            </button>
+
+            {% for sp in sports %}
+            <button type="button"
+               onclick="selectSportFilter(event, '{{ sp.slug }}')"
+               data-sport="{{ sp.slug }}"
+               class="sport-pill-btn shrink-0 sm:shrink px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer {% if selected_sport == sp.slug %}bg-brand-600 text-white shadow-lg shadow-brand-600/30 ring-2 ring-brand-500/50{% else %}bg-slate-800/90 text-slate-300 hover:bg-slate-700 hover:text-white border border-slate-700/80{% endif %}">
+                <i data-lucide="{{ sp.icon|default:'activity' }}" class="w-3.5 h-3.5"></i>
+                <span>{{ sp.name }} ({{ sp.turf_count }})</span>
+            </button>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
+
+    <!-- Mobile Filter Toggle Button (Visible on mobile/tablet < lg) -->
+    <div class="lg:hidden mb-4 flex items-center justify-between gap-3">
+        <button type="button" id="toggleSportsMobileFilterBtn" class="flex-1 py-3 px-4 rounded-2xl bg-white border border-slate-200 shadow-sm font-bold text-xs sm:text-sm text-slate-800 flex items-center justify-center gap-2 hover:bg-slate-50 transition-all cursor-pointer">
+            <i data-lucide="sliders-horizontal" class="w-4 h-4 text-brand-600"></i>
+            <span>Filters & Search</span>
+            {% if selected_sport or search_query or selected_amenities %}
+            <span class="w-2 h-2 rounded-full bg-brand-500"></span>
+            {% endif %}
+        </button>
+        {% if selected_sport or search_query or selected_amenities %}
+        <button type="button" onclick="resetAllFilters(event)" class="px-4 py-3 rounded-2xl bg-rose-50 border border-rose-200 text-rose-600 font-bold text-xs hover:bg-rose-100 transition-colors whitespace-nowrap cursor-pointer">
+            Reset
+        </button>
+        {% endif %}
+    </div>
+
+    <!-- VENUES CATALOG & FILTER SIDEBAR -->
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        
+        <!-- Filter Sidebar (Collapsible on mobile < lg, sticky on desktop >= lg) -->
+        <aside id="sportsFilterSidebar" class="hidden lg:block lg:col-span-1">
+            <form id="sportsFilterForm" onsubmit="handleFilterSubmit(event)" method="GET" action="{% url 'sports_list' %}" class="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm sticky top-24 space-y-6">
+                <!-- Mobile Header within Drawer -->
+                <div class="flex items-center justify-between pb-3 border-b border-slate-100 lg:hidden">
+                    <span class="font-extrabold text-slate-900 text-sm flex items-center gap-2">
+                        <i data-lucide="sliders-horizontal" class="w-4 h-4 text-brand-600"></i> Filter Venues
+                    </span>
+                    <button type="button" id="closeSportsMobileFilterBtn" class="p-1 text-slate-400 hover:text-slate-700 cursor-pointer">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+                <!-- Search Keyword -->
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Search Location or Name</label>
+                    <div class="relative">
+                        <i data-lucide="search" class="absolute left-3 top-3 w-4 h-4 text-slate-400"></i>
+                        <input type="text" name="q" id="filterKeyword" value="{{ search_query }}" placeholder="e.g. Bodakdev, Cricket..." class="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                    </div>
+                </div>
+
+                <!-- Sport Dropdown -->
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Sport Category</label>
+                    <select name="sport" id="filterSportSelect" onchange="selectSportFilter(event, this.value)" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-brand-500 cursor-pointer">
+                        <option value="">All Sports</option>
+                        {% for sp in sports %}
+                        <option value="{{ sp.slug }}" {% if selected_sport == sp.slug %}selected{% endif %}>
+                            {{ sp.name }} ({{ sp.turf_count }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Price Range -->
+                <div>
+                    <div class="flex items-center justify-between mb-2">
+                        <label class="text-xs font-bold uppercase tracking-wider text-slate-500">Max Price / Hour</label>
+                        <span id="priceVal" class="text-sm font-bold text-brand-600">₹{{ max_price }}</span>
+                    </div>
+                    <input type="range" name="max_price" min="500" max="2500" step="100" value="{{ max_price }}" id="priceRange" oninput="document.getElementById('priceVal').innerText = '₹' + this.value" class="w-full accent-brand-600 cursor-pointer">
+                    <div class="flex justify-between text-xs text-slate-400 mt-1">
+                        <span>₹500</span>
+                        <span>₹2,500</span>
+                    </div>
+                </div>
+
+                <!-- Amenities Checklist -->
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-3">Amenities</label>
+                    <div class="space-y-2 max-h-48 overflow-y-auto pr-1">
+                        {% for amenity in amenities %}
+                        <label class="flex items-center gap-2.5 text-sm text-slate-600 hover:text-slate-900 cursor-pointer">
+                            <input type="checkbox" name="amenity" value="{{ amenity.name }}" {% if amenity.name in selected_amenities %}checked{% endif %} class="amenity-checkbox w-4 h-4 rounded text-brand-600 focus:ring-brand-500 accent-brand-600">
+                            <span>{{ amenity.name }}</span>
+                        </label>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="pt-2 flex flex-col gap-2">
+                    <button type="submit" class="w-full py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-sm shadow-md shadow-brand-600/20 transition-all cursor-pointer">
+                        Apply Filters
+                    </button>
+                    <button type="button" onclick="resetAllFilters(event)" class="w-full text-center py-2 rounded-xl text-xs font-semibold text-slate-500 hover:text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer">
+                        Reset All Filters
+                    </button>
+                </div>
+            </form>
+        </aside>
+
+        <!-- Turfs Listing Grid -->
+        <main class="lg:col-span-3">
+            <div id="turfsResultsContainer" class="relative transition-opacity duration-200">
+                {% include 'turfs/sports_turfs_partial.html' %}
+            </div>
+        </main>
+    </div>
+
+</div>
+
+{% block extra_js %}
+<script>
+    // State tracking
+    let currentSelectedSport = "{{ selected_sport|default:'' }}";
+
+    // Bind card clicks to navigate to turf detail
+    function bindTurfCardClicks() {
+        document.querySelectorAll('#turfsResultsContainer .turf-card').forEach(card => {
+            card.addEventListener('click', (e) => {
+                if (e.target.closest('a') || e.target.closest('button')) return;
+                const url = card.getAttribute('data-detail-url');
+                if (url) window.location.href = url;
+            });
+        });
+    }
+
+    // Update horizontal pills styling
+    function updateQuickPills(sportSlug) {
+        document.querySelectorAll('.sport-pill-btn').forEach(btn => {
+            const btnSport = btn.getAttribute('data-sport');
+            const isActive = (!sportSlug && !btnSport) || (sportSlug && btnSport === sportSlug);
+            if (isActive) {
+                btn.className = 'sport-pill-btn px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer bg-brand-600 text-white shadow-lg shadow-brand-600/30 ring-2 ring-brand-500/50';
+            } else {
+                btn.className = 'sport-pill-btn px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer bg-slate-800/90 text-slate-300 hover:bg-slate-700 hover:text-white border border-slate-700/80';
+            }
+        });
+    }
+
+    // Update sidebar dropdown
+    function updateSidebarSportSelect(sportSlug) {
+        const select = document.getElementById('filterSportSelect');
+        if (select) {
+            select.value = sportSlug || '';
+        }
+    }
+
+    // Main selection function
+    window.selectSportFilter = function(e, sportSlug) {
+        if (typeof e === 'string') {
+            sportSlug = e;
+            e = null;
+        }
+        if (e && e.preventDefault) e.preventDefault();
+
+        // If clicking the currently active pill again, toggle back to all sports
+        if (sportSlug && currentSelectedSport === sportSlug) {
+            sportSlug = '';
+        }
+
+        currentSelectedSport = sportSlug || '';
+        updateQuickPills(currentSelectedSport);
+        updateSidebarSportSelect(currentSelectedSport);
+
+        // Fetch dynamic results without full page refresh
+        fetchFilteredTurfs();
+    };
+
+    // Handle sidebar filter form submit
+    window.handleFilterSubmit = function(e) {
+        if (e && e.preventDefault) e.preventDefault();
+        const select = document.getElementById('filterSportSelect');
+        currentSelectedSport = select ? select.value : currentSelectedSport;
+        updateQuickPills(currentSelectedSport);
+        fetchFilteredTurfs();
+    };
+
+    // Reset all filters
+    window.resetAllFilters = function(e) {
+        if (e && e.preventDefault) e.preventDefault();
+        const kwInput = document.getElementById('filterKeyword');
+        if (kwInput) kwInput.value = '';
+        const sportSelect = document.getElementById('filterSportSelect');
+        if (sportSelect) sportSelect.value = '';
+        const priceRange = document.getElementById('priceRange');
+        if (priceRange) {
+            priceRange.value = 2500;
+            document.getElementById('priceVal').innerText = '₹2500';
+        }
+        document.querySelectorAll('.amenity-checkbox').forEach(cb => cb.checked = false);
+
+        currentSelectedSport = '';
+        updateQuickPills('');
+        fetchFilteredTurfs();
+    };
+
+    // AJAX fetch for turfs
+    function fetchFilteredTurfs() {
+        const container = document.getElementById('turfsResultsContainer');
+        if (!container) return;
+
+        // Visual loading feedback
+        container.style.opacity = '0.4';
+        container.style.pointerEvents = 'none';
+
+        // Build URL params
+        const params = new URLSearchParams();
+        if (currentSelectedSport) params.set('sport', currentSelectedSport);
+
+        const kw = document.getElementById('filterKeyword')?.value?.trim();
+        if (kw) params.set('q', kw);
+
+        const price = document.getElementById('priceRange')?.value;
+        if (price && Number(price) < 2500) params.set('max_price', price);
+
+        document.querySelectorAll('.amenity-checkbox:checked').forEach(cb => {
+            params.append('amenity', cb.value);
+        });
+
+        const queryString = params.toString();
+        const browserUrl = window.location.pathname + (queryString ? '?' + queryString : '');
+        const fetchUrl = browserUrl + (queryString ? '&ajax=1' : '?ajax=1');
+
+        fetch(fetchUrl, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(res => {
+            if (!res.ok) throw new Error('Network error');
+            return res.json();
+        })
+        .then(data => {
+            container.innerHTML = data.html;
+            if (data.hero_title) {
+                const hero = document.getElementById('heroTitle');
+                if (hero) hero.innerHTML = data.hero_title;
+            }
+
+            // Push state into browser history so back button works seamlessly
+            window.history.pushState({ sport: currentSelectedSport, queryString }, '', browserUrl);
+
+            // Re-initialize Lucide icons and card clicks
+            if (window.lucide) {
+                lucide.createIcons();
+            }
+            bindTurfCardClicks();
+        })
+        .catch(err => {
+            console.error('Filter fetch error:', err);
+        })
+        .finally(() => {
+            container.style.opacity = '1';
+            container.style.pointerEvents = 'auto';
+        });
+    }
+
+    // Handle Browser Back / Forward buttons
+    window.addEventListener('popstate', (e) => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const sportSlug = urlParams.get('sport') || '';
+        const q = urlParams.get('q') || '';
+        const maxPrice = urlParams.get('max_price') || '2500';
+
+        currentSelectedSport = sportSlug;
+        if (document.getElementById('filterKeyword')) document.getElementById('filterKeyword').value = q;
+        if (document.getElementById('filterSportSelect')) document.getElementById('filterSportSelect').value = sportSlug;
+        if (document.getElementById('priceRange')) {
+            document.getElementById('priceRange').value = maxPrice;
+            document.getElementById('priceVal').innerText = '₹' + maxPrice;
+        }
+
+        updateQuickPills(sportSlug);
+
+        // Fetch without pushing new state
+        const container = document.getElementById('turfsResultsContainer');
+        if (!container) return;
+        container.style.opacity = '0.4';
+        const fetchUrl = window.location.pathname + window.location.search + (window.location.search ? '&ajax=1' : '?ajax=1');
+        fetch(fetchUrl, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(res => res.json())
+            .then(data => {
+                container.innerHTML = data.html;
+                if (data.hero_title && document.getElementById('heroTitle')) {
+                    document.getElementById('heroTitle').innerHTML = data.hero_title;
+                }
+                if (window.lucide) lucide.createIcons();
+                bindTurfCardClicks();
+            })
+            .finally(() => {
+                container.style.opacity = '1';
+            });
+    });
+
+    // Mobile Filter Drawer Toggle
+    const toggleSportsFilterBtn = document.getElementById('toggleSportsMobileFilterBtn');
+    const closeSportsFilterBtn = document.getElementById('closeSportsMobileFilterBtn');
+    const sportsFilterSidebar = document.getElementById('sportsFilterSidebar');
+
+    if (toggleSportsFilterBtn && sportsFilterSidebar) {
+        toggleSportsFilterBtn.addEventListener('click', () => {
+            sportsFilterSidebar.classList.toggle('hidden');
+            if (!sportsFilterSidebar.classList.contains('hidden')) {
+                sportsFilterSidebar.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        });
+    }
+
+    if (closeSportsFilterBtn && sportsFilterSidebar) {
+        closeSportsFilterBtn.addEventListener('click', () => {
+            sportsFilterSidebar.classList.add('hidden');
+        });
+    }
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', () => {
+        bindTurfCardClicks();
+    });
+</script>
+{% endblock %}
+{% endblock %}

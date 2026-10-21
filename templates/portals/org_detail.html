@@ -1,0 +1,836 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ org.name }} - Organization Details | Super Admin{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+
+    <!-- Breadcrumb & Super Admin Navigation -->
+    <div class="mb-6 flex items-center justify-between">
+        <nav class="flex items-center gap-2 text-xs font-semibold text-slate-500">
+            <a href="{% url 'super_admin_dashboard' %}" class="hover:text-slate-900 transition-colors flex items-center gap-1">
+                <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i> Super Admin Dashboard
+            </a>
+            <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-400"></i>
+            <span class="text-slate-900 font-bold">{{ org.name }}</span>
+        </nav>
+
+        <div class="flex flex-wrap items-center gap-2">
+            <button type="button" onclick="openEditOrgModal()" class="px-3.5 py-2 rounded-xl bg-white hover:bg-indigo-50 border border-slate-200 text-slate-800 hover:text-indigo-600 font-bold text-xs shadow-sm transition-all flex items-center gap-1.5 cursor-pointer">
+                <i data-lucide="edit-3" class="w-4 h-4 text-indigo-600"></i>
+                <span>Edit Org</span>
+            </button>
+            <button type="button" onclick="openDeleteOrgModal()" class="px-3.5 py-2 rounded-xl bg-white hover:bg-rose-50 border border-slate-200 text-rose-600 font-bold text-xs shadow-sm transition-all flex items-center gap-1.5 cursor-pointer">
+                <i data-lucide="trash-2" class="w-4 h-4 text-rose-600"></i>
+                <span>Delete Org</span>
+            </button>
+            <button type="button" onclick="openCreateRoleModal()" class="px-3.5 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-800 font-bold text-xs shadow-sm transition-all flex items-center gap-1.5 cursor-pointer">
+                <i data-lucide="shield-plus" class="w-4 h-4 text-brand-600"></i>
+                <span>Create Role</span>
+            </button>
+            <button type="button" onclick="openAddMemberModal()" class="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-sm transition-all flex items-center gap-1.5 cursor-pointer">
+                <i data-lucide="user-plus" class="w-4 h-4"></i>
+                <span>Add Staff / Member</span>
+            </button>
+            <button type="button" onclick="openAddBranchModal()" class="px-3.5 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs shadow-sm transition-all flex items-center gap-1.5 cursor-pointer">
+                <i data-lucide="plus" class="w-4 h-4"></i>
+                <span>Add Branch</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Organization Overview Card -->
+    <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/90 shadow-sm mb-8">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-6 pb-6 border-b border-slate-100">
+            <div class="flex items-center gap-4">
+                <div class="w-16 h-16 rounded-2xl bg-indigo-600 text-white font-black text-2xl flex items-center justify-center shadow-lg shadow-indigo-600/20">
+                    {{ org.name|slice:":1" }}
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h1 class="text-2xl font-black text-slate-900">{{ org.name }}</h1>
+                        <span class="px-2.5 py-0.5 rounded-full text-xs font-extrabold uppercase bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            Active Partner
+                        </span>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-1">{{ org.description|default:"Partner Sports Facility Provider" }}</p>
+                </div>
+            </div>
+
+            <!-- Summary Badges -->
+            <div class="flex items-center gap-4">
+                <div class="text-center px-4 py-2 bg-slate-50 rounded-2xl border border-slate-100">
+                    <span class="text-[10px] font-bold uppercase text-slate-400 block">Branches</span>
+                    <span class="text-xl font-black text-slate-900">{{ branches.count }}</span>
+                </div>
+                <div class="text-center px-4 py-2 bg-slate-50 rounded-2xl border border-slate-100">
+                    <span class="text-[10px] font-bold uppercase text-slate-400 block">Turf Courts</span>
+                    <span class="text-xl font-black text-slate-900">{{ turfs.count }}</span>
+                </div>
+                <div class="text-center px-4 py-2 bg-slate-50 rounded-2xl border border-slate-100">
+                    <span class="text-[10px] font-bold uppercase text-slate-400 block">Total Revenue</span>
+                    <span class="text-xl font-black text-emerald-600">₹{{ org_revenue|floatformat:0 }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="pt-6 grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs text-slate-600">
+            <div class="flex items-center gap-2">
+                <i data-lucide="mail" class="w-4 h-4 text-slate-400"></i>
+                <span class="font-semibold">{{ org.email|default:"No email registered" }}</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <i data-lucide="phone" class="w-4 h-4 text-slate-400"></i>
+                <span class="font-semibold">{{ org.phone|default:"No phone registered" }}</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <i data-lucide="map-pin" class="w-4 h-4 text-slate-400"></i>
+                <span class="font-semibold">{{ org.address|default:"Ahmedabad, Gujarat" }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Organization Branches & Courts Section -->
+    <div class="space-y-6 mb-12">
+        <div class="flex items-center justify-between">
+            <h2 class="text-xl font-black text-slate-900">Branches & Facilities Under {{ org.name }}</h2>
+            <button type="button" onclick="openAddBranchModal()" class="text-xs font-bold text-brand-600 hover:underline flex items-center gap-1 cursor-pointer">
+                <i data-lucide="plus" class="w-3.5 h-3.5"></i> Add Branch
+            </button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {% for branch in branches %}
+            <div class="branch-card bg-white rounded-3xl p-6 border border-slate-200/90 shadow-sm hover:shadow-xl hover:border-brand-500/40 transition-all flex flex-col justify-between group cursor-pointer" data-detail-url="{% url 'branch_detail' branch.id %}" onclick="navigateToBranch(this, event)">
+                <div>
+                    <div class="flex items-start justify-between mb-3">
+                        <div class="flex items-center gap-2.5">
+                            <a href="{% url 'branch_detail' branch.id %}" class="w-10 h-10 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-sm transition-colors">
+                                <i data-lucide="git-branch" class="w-5 h-5"></i>
+                            </a>
+                            <a href="{% url 'branch_detail' branch.id %}" class="text-left group/title">
+                                <h3 class="text-base font-black text-slate-900 group-hover/title:text-brand-600 transition-colors flex items-center gap-1.5">
+                                    <span>{{ branch.name }}</span>
+                                    <i data-lucide="arrow-up-right" class="w-3.5 h-3.5 text-slate-400 group-hover/title:text-brand-600 group-hover/title:translate-x-0.5 group-hover/title:-translate-y-0.5 transition-transform"></i>
+                                </h3>
+                                <p class="text-xs text-slate-500">{{ branch.location }}, {{ branch.city }}</p>
+                            </a>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <button type="button" 
+                                    onclick="event.stopPropagation(); openEditBranchModal(this)"
+                                    data-id="{{ branch.id }}"
+                                    data-name="{{ branch.name }}"
+                                    data-city="{{ branch.city }}"
+                                    data-location="{{ branch.location }}"
+                                    data-address="{{ branch.address }}"
+                                    data-phone="{{ branch.phone }}"
+                                    data-email="{{ branch.email }}"
+                                    data-is-active="{% if branch.is_active %}1{% else %}0{% endif %}"
+                                    class="p-1.5 rounded-lg bg-slate-100 hover:bg-indigo-50 text-slate-600 hover:text-indigo-600 transition-colors cursor-pointer" title="Edit Branch">
+                                <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+                            </button>
+                            <button type="button" 
+                                    onclick="event.stopPropagation(); openDeleteBranchModal(this)"
+                                    data-id="{{ branch.id }}"
+                                    data-name="{{ branch.name }}"
+                                    data-org-name="{{ org.name }}"
+                                    data-turf-count="{{ branch.turf_count }}"
+                                    class="p-1.5 rounded-lg bg-slate-100 hover:bg-rose-50 text-slate-600 hover:text-rose-600 transition-colors cursor-pointer" title="Delete Branch">
+                                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                            </button>
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase {% if branch.is_active %}bg-emerald-50 text-emerald-700 border border-emerald-200{% else %}bg-slate-100 text-slate-500{% endif %}">
+                                {% if branch.is_active %}Active{% else %}Inactive{% endif %}
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Turfs in this branch -->
+                    <div class="mt-4 pt-3 border-t border-slate-100">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 block">Turf Courts ({{ branch.turf_count }})</span>
+                            <a href="{% url 'branch_detail' branch.id %}" class="text-[11px] font-bold text-brand-600 hover:underline flex items-center gap-1">
+                                <span>All Courts</span>
+                                <i data-lucide="arrow-right" class="w-3 h-3"></i>
+                            </a>
+                        </div>
+                        <div class="space-y-2">
+                            {% for turf in branch.turfs.all %}
+                            <a href="{% url 'turf_detail' turf.slug %}" class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 hover:bg-slate-100/80 transition-colors text-xs group/turf">
+                                <div class="font-bold text-slate-800 group-hover/turf:text-brand-600 transition-colors">{{ turf.name }}</div>
+                                <div class="flex items-center gap-2">
+                                    <span class="font-extrabold text-emerald-600">₹{{ turf.price_per_hour|floatformat:0 }}/hr</span>
+                                    <i data-lucide="external-link" class="w-3.5 h-3.5 text-slate-400 group-hover/turf:text-brand-600"></i>
+                                </div>
+                            </a>
+                            {% empty %}
+                            <p class="text-xs text-slate-400 italic">No courts added to this branch yet.</p>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4 pt-3 border-t border-slate-100 text-xs text-slate-500 flex items-center justify-between gap-2">
+                    <span class="truncate">Contact: {{ branch.phone|default:org.phone|default:"General Org Contact" }}</span>
+                    <a href="{% url 'branch_detail' branch.id %}" class="shrink-0 text-xs font-bold text-brand-600 hover:text-brand-700 flex items-center gap-1 hover:underline transition-colors">
+                        <span>Explore Branch</span>
+                        <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+                    </a>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-span-full bg-white rounded-3xl p-8 text-center border border-slate-200">
+                <i data-lucide="git-branch" class="w-8 h-8 text-slate-300 mx-auto mb-2"></i>
+                <p class="text-sm font-bold text-slate-700">No Branches Registered</p>
+                <p class="text-xs text-slate-400 mt-1">Add branches like "Satellite Arena" or "Bodakdev Complex" to this organization.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Operational Custom Roles Section -->
+    <div class="space-y-6 mb-12">
+        <div class="flex items-center justify-between">
+            <div>
+                <h2 class="text-xl font-black text-slate-900">Operational Custom Roles</h2>
+                <p class="text-xs text-slate-500">Access privileges & permission levels configured for {{ org.name }}</p>
+            </div>
+            <button type="button" onclick="openCreateRoleModal()" class="px-3.5 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-800 font-bold text-xs shadow-sm transition-all flex items-center gap-1.5 cursor-pointer">
+                <i data-lucide="shield-plus" class="w-4 h-4 text-brand-600"></i>
+                <span>Create Role</span>
+            </button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for role in custom_roles %}
+            <div class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
+                <div>
+                    <div class="flex items-start justify-between mb-3">
+                        <div class="w-10 h-10 rounded-2xl bg-brand-50 border border-brand-100 flex items-center justify-center text-brand-600 font-black">
+                            <i data-lucide="shield" class="w-5 h-5"></i>
+                        </div>
+                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-slate-100 text-slate-600">
+                            {{ role.assigned_users.count }} Active User{{ role.assigned_users.count|pluralize }}
+                        </span>
+                    </div>
+
+                    <h3 class="text-base font-black text-slate-900">{{ role.name }}</h3>
+                    <p class="text-xs text-slate-500 mt-1 line-clamp-2 leading-relaxed">{{ role.description|default:"No role description provided." }}</p>
+
+                    <div class="mt-4 pt-3 border-t border-slate-100">
+                        <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-2">Granted Privileges:</span>
+                        <div class="flex flex-wrap gap-1.5">
+                            {% if role.can_manage_bookings %}
+                            <span class="px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 text-[10px] font-bold">Check-in / Passes</span>
+                            {% endif %}
+                            {% if role.can_manage_turfs %}
+                            <span class="px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 text-[10px] font-bold">Turf Courts</span>
+                            {% endif %}
+                            {% if role.can_manage_slots %}
+                            <span class="px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 text-[10px] font-bold">Slot Timing</span>
+                            {% endif %}
+                            {% if role.can_manage_staff %}
+                            <span class="px-2 py-0.5 rounded-md bg-purple-50 text-purple-700 text-[10px] font-bold">Staff Mgmt</span>
+                            {% endif %}
+                            {% if role.can_view_reports %}
+                            <span class="px-2 py-0.5 rounded-md bg-amber-50 text-amber-700 text-[10px] font-bold">Revenue Reports</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-span-full bg-white rounded-3xl p-8 text-center border border-slate-200">
+                <i data-lucide="shield" class="w-8 h-8 text-slate-300 mx-auto mb-2"></i>
+                <p class="text-sm font-bold text-slate-700">No Custom Roles Configured</p>
+                <p class="text-xs text-slate-400 mt-1">Create roles such as "Branch Manager", "Head Groundkeeper", or "Front Desk Cashier".</p>
+                <button type="button" onclick="openCreateRoleModal()" class="mt-3 px-4 py-2 rounded-xl bg-brand-600 text-white font-bold text-xs cursor-pointer">Create First Role</button>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Team Members & Staff Roles in this Organization -->
+    <div class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden mb-8">
+        <div class="p-6 border-b border-slate-100 flex items-center justify-between">
+            <div>
+                <h3 class="text-lg font-black text-slate-900">Staff, Managers & Admins</h3>
+                <p class="text-xs text-slate-500">Users assigned to operate this organization and its branches</p>
+            </div>
+            <div class="flex items-center gap-2.5">
+                <button type="button" onclick="openAddMemberModal()" class="px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-sm transition-all flex items-center gap-1.5 cursor-pointer">
+                    <i data-lucide="user-plus" class="w-3.5 h-3.5"></i>
+                    <span>Add Staff / Member</span>
+                </button>
+                <span class="px-3 py-1 rounded-full bg-slate-100 text-slate-700 font-bold text-xs">{{ team_members.count }} Members</span>
+            </div>
+        </div>
+
+        <div class="overflow-x-auto touch-scroll">
+            <table class="w-full text-left text-xs min-w-[640px]">
+                <thead class="bg-slate-50 text-slate-500 uppercase font-extrabold">
+                    <tr>
+                        <th class="py-3 px-6">Name & Email</th>
+                        <th class="py-3 px-6">Assigned Role</th>
+                        <th class="py-3 px-6">Branch</th>
+                        <th class="py-3 px-6">Phone</th>
+                        <th class="py-3 px-6">Joined</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {% for m in team_members %}
+                    <tr class="hover:bg-slate-50/60">
+                        <td class="py-3.5 px-6 font-bold text-slate-900">
+                            <div>{{ m.user.get_full_name|default:m.user.username }}</div>
+                            <div class="text-[11px] text-slate-400 font-normal">{{ m.user.email }}</div>
+                        </td>
+                        <td class="py-3.5 px-6">
+                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-indigo-50 text-indigo-700">
+                                {{ m.role_display_name }}
+                            </span>
+                        </td>
+                        <td class="py-3.5 px-6 text-slate-600">{{ m.branch.name|default:"All Branches (Head Office)" }}</td>
+                        <td class="py-3.5 px-6 text-slate-600">{{ m.phone|default:"—" }}</td>
+                        <td class="py-3.5 px-6 text-slate-400">{{ m.created_at|date:"d M Y" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="py-6 text-center text-slate-400">No team members assigned yet.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Add Branch -->
+<div id="addBranchModal" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl border border-slate-200 relative max-h-[90vh] overflow-y-auto my-auto">
+        <div class="flex items-center justify-between pb-4 border-b border-slate-100 mb-6">
+            <h3 class="text-lg font-black text-slate-900">Add Branch to {{ org.name }}</h3>
+            <button type="button" onclick="closeAddBranchModal()" class="text-slate-400 hover:text-slate-600 p-1">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+
+        <form action="{% url 'super_admin_create_branch' %}" method="POST" class="space-y-4">
+            {% csrf_token %}
+            <input type="hidden" name="organization_id" value="{{ org.id }}">
+
+            <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Branch Name *</label>
+                <input type="text" name="name" required placeholder="e.g. Bodakdev Campus" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Location / Area *</label>
+                <input type="text" name="location" required placeholder="e.g. Bodakdev, Ahmedabad" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">City</label>
+                <input type="text" name="city" value="Ahmedabad" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Phone</label>
+                <input type="tel" name="phone" placeholder="+91 98765 43210" maxlength="15" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+            </div>
+
+            <div class="pt-4 flex items-center justify-end gap-2">
+                <button type="button" onclick="closeAddBranchModal()" class="px-4 py-2.5 rounded-xl bg-slate-100 text-slate-700 font-bold text-xs cursor-pointer">Cancel</button>
+                <button type="submit" class="px-5 py-2.5 rounded-xl bg-brand-600 text-white font-bold text-xs shadow-md cursor-pointer">Add Branch</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal: Edit Branch -->
+<div id="editBranchModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto animate-fade-in">
+        <div class="flex items-center justify-between pb-4 border-b border-slate-100 mb-5">
+            <div>
+                <h3 class="text-lg font-black text-slate-900 flex items-center gap-2">
+                    <i data-lucide="edit-3" class="w-5 h-5 text-indigo-600"></i>
+                    <span>Edit Branch</span>
+                </h3>
+                <p class="text-xs text-slate-500 mt-0.5">Modify branch details under {{ org.name }}</p>
+            </div>
+            <button type="button" onclick="closeEditBranchModal()" class="p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-500 cursor-pointer">
+                <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+        </div>
+
+        <form id="editBranchForm" method="POST" action="" class="space-y-4">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ request.path }}">
+            <input type="hidden" name="organization_id" value="{{ org.id }}">
+
+            <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Branch Name *</label>
+                <input type="text" id="editBranchName" name="name" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Location / Area *</label>
+                    <input type="text" id="editBranchLocation" name="location" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">City</label>
+                    <input type="text" id="editBranchCity" name="city" value="Ahmedabad" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Full Address</label>
+                <textarea id="editBranchAddress" name="address" rows="2" class="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"></textarea>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Phone</label>
+                    <input type="tel" id="editBranchPhone" name="phone" placeholder="+91 98765 43210" maxlength="15" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Email</label>
+                    <input type="email" id="editBranchEmail" name="email" pattern="[^@\s]+@[^@\s]+\.[^@\s]+" title="Email must contain '@' and '.'" placeholder="branch@example.com" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                </div>
+            </div>
+
+            <div class="pt-1">
+                <label class="inline-flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" id="editBranchIsActive" name="is_active" class="w-4 h-4 rounded text-brand-600 focus:ring-brand-500">
+                    <span class="text-xs font-bold text-slate-700">Active Branch</span>
+                </label>
+            </div>
+
+            <div class="pt-4 border-t border-slate-100 flex items-center justify-end gap-2">
+                <button type="button" onclick="closeEditBranchModal()" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs cursor-pointer">Cancel</button>
+                <button type="submit" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-md cursor-pointer">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal: Delete Branch Confirmation -->
+<div id="deleteBranchModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto my-auto animate-fade-in">
+        <div class="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center mx-auto mb-4">
+            <i data-lucide="alert-triangle" class="w-6 h-6"></i>
+        </div>
+
+        <div class="text-center mb-6">
+            <h3 class="text-lg font-black text-slate-900">Delete Branch?</h3>
+            <p class="text-xs text-slate-500 mt-1">Are you sure you want to permanently delete this branch?</p>
+            <div class="mt-3 p-3 rounded-2xl bg-slate-50 border border-slate-200 text-left">
+                <p class="text-xs font-bold text-slate-800" id="delBranchNameText">Branch Name</p>
+                <p class="text-[11px] text-slate-500" id="delBranchOrgText">Organization: {{ org.name }}</p>
+                <p class="text-[11px] text-amber-600 font-semibold mt-1" id="delBranchTurfsText">Courts assigned will be unlinked.</p>
+            </div>
+        </div>
+
+        <form id="deleteBranchForm" method="POST" action="">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ request.path }}">
+            <div class="flex items-center justify-end gap-2">
+                <button type="button" onclick="closeDeleteBranchModal()" class="w-1/2 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs cursor-pointer">Cancel</button>
+                <button type="submit" class="w-1/2 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs shadow-md shadow-rose-600/30 cursor-pointer">Yes, Delete</button>
+            </div>
+        </form>
+    </div>
+</div>
+<!-- Modal: Create Role for this Org -->
+<div id="createRoleModal" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl border border-slate-200 relative animate-fade-in max-h-[90vh] overflow-y-auto my-auto">
+        <div class="flex items-center justify-between pb-4 border-b border-slate-100 mb-6">
+            <div>
+                <h3 class="text-lg font-black text-slate-900">Create Operational Role</h3>
+                <p class="text-xs text-slate-500 mt-0.5">Define role & permissions for {{ org.name }}</p>
+            </div>
+            <button type="button" onclick="closeCreateRoleModal()" class="text-slate-400 hover:text-slate-600 p-1 cursor-pointer">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+
+        <form action="{% url 'super_admin_create_role' %}" method="POST" class="space-y-4">
+            {% csrf_token %}
+            <input type="hidden" name="organization_id" value="{{ org.id }}">
+            <input type="hidden" name="next" value="{{ request.path }}">
+
+            <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Role Title *</label>
+                <input type="text" name="name" required placeholder="e.g. Branch Manager, Shift Lead, Cashier" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Description</label>
+                <input type="text" name="description" placeholder="Oversees court booking verify & day-to-day slots" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+            </div>
+
+            <div class="pt-2 border-t border-slate-100 space-y-2.5">
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-600 block">Privileges & Permissions:</span>
+                
+                <label class="flex items-center gap-2.5 text-xs text-slate-700 cursor-pointer">
+                    <input type="checkbox" name="can_manage_bookings" checked class="w-4 h-4 text-brand-600 rounded">
+                    <span><strong>Check-in & Ticket Verification:</strong> Scan & verify customer match passes</span>
+                </label>
+                <label class="flex items-center gap-2.5 text-xs text-slate-700 cursor-pointer">
+                    <input type="checkbox" name="can_manage_turfs" class="w-4 h-4 text-brand-600 rounded">
+                    <span><strong>Manage Turfs & Facilities:</strong> Update court details & status</span>
+                </label>
+                <label class="flex items-center gap-2.5 text-xs text-slate-700 cursor-pointer">
+                    <input type="checkbox" name="can_manage_slots" class="w-4 h-4 text-brand-600 rounded">
+                    <span><strong>Manage Slot Times:</strong> Open/close time slots</span>
+                </label>
+                <label class="flex items-center gap-2.5 text-xs text-slate-700 cursor-pointer">
+                    <input type="checkbox" name="can_manage_staff" class="w-4 h-4 text-brand-600 rounded">
+                    <span><strong>Manage Staff:</strong> Add and assign team members</span>
+                </label>
+                <label class="flex items-center gap-2.5 text-xs text-slate-700 cursor-pointer">
+                    <input type="checkbox" name="can_view_reports" class="w-4 h-4 text-brand-600 rounded">
+                    <span><strong>Analytics & Reports:</strong> View financial summaries</span>
+                </label>
+            </div>
+
+            <div class="pt-4 flex items-center justify-end gap-2">
+                <button type="button" onclick="closeCreateRoleModal()" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs cursor-pointer">Cancel</button>
+                <button type="submit" class="px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs shadow-md cursor-pointer">Create Role</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal: Add Team Member / Staff for this Org -->
+<div id="addMemberModal" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl border border-slate-200 relative animate-fade-in max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between pb-4 border-b border-slate-100 mb-6">
+            <div>
+                <h3 class="text-lg font-black text-slate-900">Add Staff / Member</h3>
+                <p class="text-xs text-slate-500 mt-0.5">Provision login account under {{ org.name }}</p>
+            </div>
+            <button type="button" onclick="closeAddMemberModal()" class="text-slate-400 hover:text-slate-600 p-1 cursor-pointer">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+
+        <form action="{% url 'super_admin_create_team_member' %}" method="POST" class="space-y-4">
+            {% csrf_token %}
+            <input type="hidden" name="organization_id" value="{{ org.id }}">
+            <input type="hidden" name="next" value="{{ request.path }}">
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-600 mb-1">First Name *</label>
+                    <input type="text" name="first_name" required minlength="2" placeholder="Aarav" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Last Name</label>
+                    <input type="text" name="last_name" placeholder="Shah" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Login Email *</label>
+                <input type="email" name="email" required pattern="[^@\s]+@[^@\s]+\.[^@\s]+" title="Email must contain '@' and '.'" placeholder="staff.bodakdev@turfbook.com" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                <span class="text-[10px] text-slate-400 mt-0.5 block">Staff will log in with this email at /login/</span>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Password</label>
+                    <input type="password" name="password" minlength="8" value="password123" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Phone</label>
+                    <input type="tel" name="phone" placeholder="+91 98765 43210" maxlength="15" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Portal System Role *</label>
+                <select name="system_role" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 bg-white">
+                    <option value="STAFF" selected>Staff (Check-in & Desk Portal)</option>
+                    <option value="MANAGER">Manager (Branch Operations Portal)</option>
+                    <option value="ORG_ADMIN">Organization Admin (Full Org Access)</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Assign Operational Role (Optional)</label>
+                <select name="custom_role_id" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 bg-white">
+                    <option value="">Default System Role</option>
+                    {% for r in custom_roles %}
+                    <option value="{{ r.id }}">{{ r.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Assign Branch</label>
+                <select name="branch_id" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 bg-white">
+                    <option value="">All Branches (Head Office)</option>
+                    {% for b in branches %}
+                    <option value="{{ b.id }}">{{ b.name }} ({{ b.location }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="pt-4 flex items-center justify-end gap-2">
+                <button type="button" onclick="closeAddMemberModal()" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs cursor-pointer">Cancel</button>
+                <button type="submit" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-md cursor-pointer">Add Member</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal: Edit Organization -->
+<div id="editOrgModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto animate-fade-in">
+        <div class="flex items-center justify-between pb-4 border-b border-slate-100 mb-5">
+            <div>
+                <h3 class="text-lg font-black text-slate-900 flex items-center gap-2">
+                    <i data-lucide="edit-3" class="w-5 h-5 text-indigo-600"></i>
+                    <span>Edit Organization</span>
+                </h3>
+                <p class="text-xs text-slate-500 mt-0.5">Update organization profile, headquarters, and operational status</p>
+            </div>
+            <button type="button" onclick="closeEditOrgModal()" class="p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-500 cursor-pointer">
+                <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+        </div>
+
+        <form method="POST" action="{% url 'super_admin_update_org' org.id %}" class="space-y-4">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ request.path }}">
+
+            <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Organization Name *</label>
+                <input type="text" name="name" value="{{ org.name }}" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Description</label>
+                <textarea name="description" rows="2" class="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">{{ org.description }}</textarea>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Official Email</label>
+                    <input type="email" name="email" value="{{ org.email }}" pattern="[^@\s]+@[^@\s]+\.[^@\s]+" title="Email must contain '@' and '.'" placeholder="contact@org.com" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Official Phone</label>
+                    <input type="tel" name="phone" value="{{ org.phone }}" placeholder="+91 98765 43210" maxlength="15" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Head Office Address</label>
+                <input type="text" name="address" value="{{ org.address }}" placeholder="Bodakdev, Ahmedabad" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+            </div>
+
+            <div class="pt-1">
+                <label class="inline-flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" name="is_active" {% if org.is_active %}checked{% endif %} class="w-4 h-4 rounded text-brand-600 focus:ring-brand-500">
+                    <span class="text-xs font-bold text-slate-700">Active Organization (Operational across platform)</span>
+                </label>
+            </div>
+
+            <div class="pt-4 border-t border-slate-100 flex items-center justify-end gap-2">
+                <button type="button" onclick="closeEditOrgModal()" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs cursor-pointer">Cancel</button>
+                <button type="submit" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-md cursor-pointer">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal: Delete Organization Confirmation -->
+<div id="deleteOrgModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-100 animate-fade-in">
+        <div class="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center mx-auto mb-4">
+            <i data-lucide="alert-triangle" class="w-6 h-6"></i>
+        </div>
+
+        <div class="text-center mb-6">
+            <h3 class="text-lg font-black text-slate-900">Delete Organization?</h3>
+            <p class="text-xs text-slate-500 mt-1">Are you sure you want to permanently delete this organization? This action cannot be undone.</p>
+            <div class="mt-3 p-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-left space-y-1">
+                <p class="text-xs font-bold text-slate-800">{{ org.name }}</p>
+                <p class="text-[11px] text-rose-600 font-semibold">Deleting will remove {{ branches.count }} branches, all custom roles, and {{ turfs.count }} turf courts permanently.</p>
+                <p class="text-[11px] text-slate-500">Assigned staff members will have their roles reset.</p>
+            </div>
+        </div>
+
+        <form method="POST" action="{% url 'super_admin_delete_org' org.id %}">
+            {% csrf_token %}
+            <div class="flex items-center justify-end gap-2">
+                <button type="button" onclick="closeDeleteOrgModal()" class="w-1/2 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs cursor-pointer">Cancel</button>
+                <button type="submit" class="w-1/2 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs shadow-md shadow-rose-600/30 cursor-pointer">Yes, Delete</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function navigateToBranch(el, e) {
+        if (e && e.target && (e.target.closest('a') || e.target.closest('button'))) return;
+        const url = el ? el.getAttribute('data-detail-url') : null;
+        if (url) window.location.href = url;
+    }
+
+    function openEditOrgModal() {
+        const m = document.getElementById('editOrgModal');
+        if (m) {
+            m.classList.remove('hidden');
+            m.classList.add('flex');
+            lucide.createIcons();
+        }
+    }
+    function closeEditOrgModal() {
+        const m = document.getElementById('editOrgModal');
+        if (m) {
+            m.classList.add('hidden');
+            m.classList.remove('flex');
+        }
+    }
+    function openDeleteOrgModal() {
+        const m = document.getElementById('deleteOrgModal');
+        if (m) {
+            m.classList.remove('hidden');
+            m.classList.add('flex');
+            lucide.createIcons();
+        }
+    }
+    function closeDeleteOrgModal() {
+        const m = document.getElementById('deleteOrgModal');
+        if (m) {
+            m.classList.add('hidden');
+            m.classList.remove('flex');
+        }
+    }
+    function openCreateRoleModal() {
+        const m = document.getElementById('createRoleModal');
+        if (m) {
+            m.classList.remove('hidden');
+            m.classList.add('flex');
+            lucide.createIcons();
+        }
+    }
+    function closeCreateRoleModal() {
+        const m = document.getElementById('createRoleModal');
+        if (m) {
+            m.classList.add('hidden');
+            m.classList.remove('flex');
+        }
+    }
+
+    function openAddMemberModal() {
+        const m = document.getElementById('addMemberModal');
+        if (m) {
+            m.classList.remove('hidden');
+            m.classList.add('flex');
+            lucide.createIcons();
+        }
+    }
+    function closeAddMemberModal() {
+        const m = document.getElementById('addMemberModal');
+        if (m) {
+            m.classList.add('hidden');
+            m.classList.remove('flex');
+        }
+    }
+    function openAddBranchModal() {
+        const m = document.getElementById('addBranchModal');
+        if (m) {
+            m.classList.remove('hidden');
+            m.classList.add('flex');
+            lucide.createIcons();
+        }
+    }
+    function closeAddBranchModal() {
+        const m = document.getElementById('addBranchModal');
+        if (m) {
+            m.classList.add('hidden');
+            m.classList.remove('flex');
+        }
+    }
+
+    function openEditBranchModal(elOrId, name, city, location, address, phone, email, isActive) {
+        let id = elOrId;
+        if (typeof elOrId === 'object' && elOrId !== null && elOrId.getAttribute) {
+            const btn = elOrId;
+            id = btn.getAttribute('data-id');
+            name = btn.getAttribute('data-name');
+            city = btn.getAttribute('data-city');
+            location = btn.getAttribute('data-location');
+            address = btn.getAttribute('data-address');
+            phone = btn.getAttribute('data-phone');
+            email = btn.getAttribute('data-email');
+            isActive = btn.getAttribute('data-is-active') === '1';
+        }
+        const form = document.getElementById('editBranchForm');
+        if (form) {
+            form.action = `/super-admin/branches/${id}/update/`;
+        }
+        document.getElementById('editBranchName').value = name || '';
+        document.getElementById('editBranchCity').value = city || 'Ahmedabad';
+        document.getElementById('editBranchLocation').value = location || '';
+        document.getElementById('editBranchAddress').value = address || '';
+        document.getElementById('editBranchPhone').value = phone || '';
+        document.getElementById('editBranchEmail').value = email || '';
+        document.getElementById('editBranchIsActive').checked = Boolean(isActive);
+
+        const modal = document.getElementById('editBranchModal');
+        if (modal) {
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            lucide.createIcons();
+        }
+    }
+
+    function closeEditBranchModal() {
+        const modal = document.getElementById('editBranchModal');
+        if (modal) {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+    }
+
+    function openDeleteBranchModal(elOrId, name, orgName, turfCount) {
+        let id = elOrId;
+        if (typeof elOrId === 'object' && elOrId !== null && elOrId.getAttribute) {
+            const btn = elOrId;
+            id = btn.getAttribute('data-id');
+            name = btn.getAttribute('data-name');
+            orgName = btn.getAttribute('data-org-name');
+            turfCount = btn.getAttribute('data-turf-count');
+        }
+        const form = document.getElementById('deleteBranchForm');
+        if (form) {
+            form.action = `/super-admin/branches/${id}/delete/`;
+        }
+        document.getElementById('delBranchNameText').innerText = name || 'Branch';
+        document.getElementById('delBranchTurfsText').innerText = `${turfCount || 0} courts linked to this branch.`;
+
+        const modal = document.getElementById('deleteBranchModal');
+        if (modal) {
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            lucide.createIcons();
+        }
+    }
+
+    function closeDeleteBranchModal() {
+        const modal = document.getElementById('deleteBranchModal');
+        if (modal) {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+    }
+</script>
+{% endblock %}

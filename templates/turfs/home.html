@@ -1,0 +1,586 @@
+{% extends 'base.html' %}
+
+{% block title %}Sports Turfs, Box Cricket & Arenas in {{ current_city|default:'Rajkot' }} - BookMyTurf{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-10">
+
+    <!-- ========================================================================= -->
+    <!-- 1. BOOKMYSHOW HERO CAROUSEL BANNER (Full-width Rounded Slider with Arrows) -->
+    <!-- ========================================================================= -->
+    <section class="relative rounded-2xl overflow-hidden shadow-lg bg-slate-900 aspect-[21/9] sm:aspect-[24/8] max-h-[380px] group select-none">
+        <!-- Slides Container -->
+        <div id="bmsCarouselTrack" class="relative w-full h-full">
+            
+            <!-- Slide 1: Premier Box Cricket in Current City -->
+            <div class="bms-slide absolute inset-0 transition-opacity duration-700 ease-in-out opacity-100" data-slide-index="0">
+                <img src="https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?auto=format&fit=crop&w=1920&q=80" alt="Box Cricket in {{ current_city }}" class="w-full h-full object-cover">
+                <div class="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-950/50 to-transparent flex items-center">
+                    <div class="p-6 sm:p-12 max-w-xl text-white">
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-extrabold uppercase tracking-wider bg-[#f84464] text-white shadow-sm mb-3">
+                            <i data-lucide="zap" class="w-3.5 h-3.5"></i> Featured Arena In {{ current_city }}
+                        </span>
+                        <h2 class="text-2xl sm:text-4xl lg:text-5xl font-black tracking-tight leading-tight">
+                            Book Top Box Cricket Turfs
+                        </h2>
+                        <p class="mt-2 text-xs sm:text-sm text-slate-200 line-clamp-2">
+                            High mast floodlights, imported Dutch synthetic grass, and instant slot confirmation across {{ current_city }}.
+                        </p>
+                        <div class="mt-4 sm:mt-6 flex items-center gap-3">
+                            <a href="{% url 'turf_list' %}?sport=cricket" class="px-5 py-2.5 rounded-lg bg-[#f84464] hover:bg-[#e03554] text-white font-bold text-xs sm:text-sm shadow-md transition-all flex items-center gap-2">
+                                <span>Book Cricket Slot</span>
+                                <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                            </a>
+                            <a href="{% url 'turf_list' %}" class="px-4 py-2.5 rounded-lg bg-white/20 hover:bg-white/30 backdrop-blur-md text-white font-bold text-xs sm:text-sm transition-colors">
+                                Explore All
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Slide 2: Football Turf Champions -->
+            <div class="bms-slide absolute inset-0 transition-opacity duration-700 ease-in-out opacity-0" data-slide-index="1">
+                <img src="https://images.unsplash.com/photo-1579952363873-27f3bade9f55?auto=format&fit=crop&w=1920&q=80" alt="Football Turf in {{ current_city }}" class="w-full h-full object-cover">
+                <div class="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-950/50 to-transparent flex items-center">
+                    <div class="p-6 sm:p-12 max-w-xl text-white">
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-extrabold uppercase tracking-wider bg-emerald-600 text-white shadow-sm mb-3">
+                            <i data-lucide="trophy" class="w-3.5 h-3.5"></i> FIFA Quality Astro Turf
+                        </span>
+                        <h2 class="text-2xl sm:text-4xl lg:text-5xl font-black tracking-tight leading-tight">
+                            5-a-side & 7-a-side Football
+                        </h2>
+                        <p class="mt-2 text-xs sm:text-sm text-slate-200 line-clamp-2">
+                            Play under professional tournament floodlights. Locker rooms, bibs, and match balls included.
+                        </p>
+                        <div class="mt-4 sm:mt-6 flex items-center gap-3">
+                            <a href="{% url 'turf_list' %}?sport=football" class="px-5 py-2.5 rounded-lg bg-[#f84464] hover:bg-[#e03554] text-white font-bold text-xs sm:text-sm shadow-md transition-all flex items-center gap-2">
+                                <span>Reserve Football Pitch</span>
+                                <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Slide 3: Pickleball & Paddleball Explosion -->
+            <div class="bms-slide absolute inset-0 transition-opacity duration-700 ease-in-out opacity-0" data-slide-index="2">
+                <img src="https://images.unsplash.com/photo-1622279457486-62dcc4a431d6?auto=format&fit=crop&w=1920&q=80" alt="Pickleball in {{ current_city }}" class="w-full h-full object-cover">
+                <div class="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-950/50 to-transparent flex items-center">
+                    <div class="p-6 sm:p-12 max-w-xl text-white">
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-extrabold uppercase tracking-wider bg-purple-600 text-white shadow-sm mb-3">
+                            <i data-lucide="activity" class="w-3.5 h-3.5"></i> Racket Revolution
+                        </span>
+                        <h2 class="text-2xl sm:text-4xl lg:text-5xl font-black tracking-tight leading-tight">
+                            Pickleball & Paddle Courts
+                        </h2>
+                        <p class="mt-2 text-xs sm:text-sm text-slate-200 line-clamp-2">
+                            Cushioned acrylic outdoor and indoor courts in {{ current_city }} with paddle rentals & coaching available.
+                        </p>
+                        <div class="mt-4 sm:mt-6 flex items-center gap-3">
+                            <a href="{% url 'turf_list' %}?sport=pickleball" class="px-5 py-2.5 rounded-lg bg-[#f84464] hover:bg-[#e03554] text-white font-bold text-xs sm:text-sm shadow-md transition-all flex items-center gap-2">
+                                <span>Book Pickleball Court</span>
+                                <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Carousel Navigation Arrows -->
+        <button id="carouselPrevBtn" type="button" aria-label="Previous Slide" class="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-black/40 hover:bg-black/70 text-white backdrop-blur-sm flex items-center justify-center opacity-80 hover:opacity-100 transition-all cursor-pointer shadow-lg z-10">
+            <i data-lucide="chevron-left" class="w-6 h-6"></i>
+        </button>
+        <button id="carouselNextBtn" type="button" aria-label="Next Slide" class="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-black/40 hover:bg-black/70 text-white backdrop-blur-sm flex items-center justify-center opacity-80 hover:opacity-100 transition-all cursor-pointer shadow-lg z-10">
+            <i data-lucide="chevron-right" class="w-6 h-6"></i>
+        </button>
+
+        <!-- Carousel Dot Indicators -->
+        <div id="carouselDots" class="absolute bottom-3 sm:bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 z-10">
+            <button type="button" class="carousel-dot w-2.5 h-2.5 rounded-full bg-white transition-all" data-dot="0"></button>
+            <button type="button" class="carousel-dot w-2.5 h-2.5 rounded-full bg-white/50 transition-all" data-dot="1"></button>
+            <button type="button" class="carousel-dot w-2.5 h-2.5 rounded-full bg-white/50 transition-all" data-dot="2"></button>
+        </div>
+    </section>
+
+    <!-- ========================================================================= -->
+    <!-- 2. BROWSE BY SPORTS CATEGORY (BookMyShow Circular Category Icons) -->
+    <!-- ========================================================================= -->
+    <section>
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">The Best of Sports & Activities</h2>
+            <a href="{% url 'sports_list' %}" class="text-xs sm:text-sm font-bold text-[#f84464] hover:underline flex items-center gap-1">
+                <span>View All Sports</span>
+                <i data-lucide="chevron-right" class="w-4 h-4"></i>
+            </a>
+        </div>
+
+        <div class="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-8 gap-3 sm:gap-4 text-center">
+            <!-- Cricket -->
+            <a href="{% url 'turf_list' %}?sport=cricket" class="group flex flex-col items-center">
+                <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-emerald-50 border border-emerald-200/80 group-hover:border-[#f84464] flex items-center justify-center text-emerald-600 group-hover:scale-105 group-hover:shadow-md transition-all">
+                    <i data-lucide="target" class="w-7 h-7 sm:w-8 sm:h-8"></i>
+                </div>
+                <span class="mt-2 text-xs font-bold text-slate-800 group-hover:text-[#f84464] transition-colors">Box Cricket</span>
+            </a>
+
+            <!-- Football -->
+            <a href="{% url 'turf_list' %}?sport=football" class="group flex flex-col items-center">
+                <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-blue-50 border border-blue-200/80 group-hover:border-[#f84464] flex items-center justify-center text-blue-600 group-hover:scale-105 group-hover:shadow-md transition-all">
+                    <i data-lucide="trophy" class="w-7 h-7 sm:w-8 sm:h-8"></i>
+                </div>
+                <span class="mt-2 text-xs font-bold text-slate-800 group-hover:text-[#f84464] transition-colors">Football</span>
+            </a>
+
+            <!-- Pickleball -->
+            <a href="{% url 'turf_list' %}?sport=pickleball" class="group flex flex-col items-center">
+                <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-purple-50 border border-purple-200/80 group-hover:border-[#f84464] flex items-center justify-center text-purple-600 group-hover:scale-105 group-hover:shadow-md transition-all">
+                    <i data-lucide="activity" class="w-7 h-7 sm:w-8 sm:h-8"></i>
+                </div>
+                <span class="mt-2 text-xs font-bold text-slate-800 group-hover:text-[#f84464] transition-colors">Pickleball</span>
+            </a>
+
+            <!-- Paddleball -->
+            <a href="{% url 'turf_list' %}?sport=paddleball" class="group flex flex-col items-center">
+                <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-amber-50 border border-amber-200/80 group-hover:border-[#f84464] flex items-center justify-center text-amber-600 group-hover:scale-105 group-hover:shadow-md transition-all">
+                    <i data-lucide="zap" class="w-7 h-7 sm:w-8 sm:h-8"></i>
+                </div>
+                <span class="mt-2 text-xs font-bold text-slate-800 group-hover:text-[#f84464] transition-colors">Paddleball</span>
+            </a>
+
+            <!-- Badminton -->
+            <a href="{% url 'turf_list' %}?q=badminton" class="group flex flex-col items-center">
+                <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-rose-50 border border-rose-200/80 group-hover:border-[#f84464] flex items-center justify-center text-[#f84464] group-hover:scale-105 group-hover:shadow-md transition-all">
+                    <i data-lucide="feather" class="w-7 h-7 sm:w-8 sm:h-8"></i>
+                </div>
+                <span class="mt-2 text-xs font-bold text-slate-800 group-hover:text-[#f84464] transition-colors">Badminton</span>
+            </a>
+
+            <!-- Tennis -->
+            <a href="{% url 'turf_list' %}?q=tennis" class="group flex flex-col items-center">
+                <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-teal-50 border border-teal-200/80 group-hover:border-[#f84464] flex items-center justify-center text-teal-600 group-hover:scale-105 group-hover:shadow-md transition-all">
+                    <i data-lucide="circle-dot" class="w-7 h-7 sm:w-8 sm:h-8"></i>
+                </div>
+                <span class="mt-2 text-xs font-bold text-slate-800 group-hover:text-[#f84464] transition-colors">Tennis</span>
+            </a>
+
+            <!-- Basketball -->
+            <a href="{% url 'turf_list' %}?q=basketball" class="group flex flex-col items-center">
+                <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-orange-50 border border-orange-200/80 group-hover:border-[#f84464] flex items-center justify-center text-orange-600 group-hover:scale-105 group-hover:shadow-md transition-all">
+                    <svg class="w-7 h-7 sm:w-8 sm:h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="2" y1="12" x2="22" y2="12"></line>
+                        <line x1="12" y1="2" x2="12" y2="22"></line>
+                        <path d="M4.93 4.93c3.9 3.9 3.9 10.24 0 14.14"></path>
+                        <path d="M19.07 4.93c-3.9 3.9-3.9 10.24 0 14.14"></path>
+                    </svg>
+                </div>
+                <span class="mt-2 text-xs font-bold text-slate-800 group-hover:text-[#f84464] transition-colors">Basketball</span>
+            </a>
+
+            <!-- All Venues -->
+            <a href="{% url 'turf_list' %}" class="group flex flex-col items-center">
+                <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-slate-100 border border-slate-200 group-hover:border-[#f84464] flex items-center justify-center text-slate-700 group-hover:scale-105 group-hover:shadow-md transition-all">
+                    <i data-lucide="layout-grid" class="w-7 h-7 sm:w-8 sm:h-8"></i>
+                </div>
+                <span class="mt-2 text-xs font-bold text-slate-800 group-hover:text-[#f84464] transition-colors">All Arenas</span>
+            </a>
+        </div>
+    </section>
+
+    <!-- ========================================================================= -->
+    <!-- 3. RECOMMENDED TURFS IN CURRENT CITY (BookMyShow Movie/Event Poster Cards) -->
+    <!-- ========================================================================= -->
+    <section>
+        <div class="flex items-end justify-between mb-5">
+            <div>
+                <h2 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+                    <span>Recommended Turfs in {{ current_city|default:'Rajkot' }}</span>
+                </h2>
+                <p class="text-xs sm:text-sm text-slate-500 mt-0.5">Top-rated venues with live slot booking</p>
+            </div>
+            <a href="{% url 'turf_list' %}" class="text-xs sm:text-sm font-bold text-[#f84464] hover:underline flex items-center gap-1 whitespace-nowrap">
+                <span>See All ›</span>
+            </a>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+            {% for turf in featured_turfs %}
+            <div class="bms-poster-card group bg-white rounded-xl overflow-hidden border border-slate-200 shadow-xs flex flex-col cursor-pointer">
+                
+                <!-- Poster Thumbnail Image -->
+                <a href="{% url 'turf_detail' turf.slug %}" class="block relative aspect-[4/3] bg-slate-200 overflow-hidden">
+                    <img src="{{ turf.image_url|default:'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?auto=format&fit=crop&w=600&q=80' }}" alt="{{ turf.name }}" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?auto=format&fit=crop&w=600&q=80';" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                    
+                    <!-- Rating Pill Overlay (BookMyShow Style) -->
+                    <div class="absolute bottom-2 left-2 px-2 py-0.5 rounded bg-black/80 backdrop-blur-xs text-white text-[11px] font-bold flex items-center gap-1 shadow">
+                        <i data-lucide="star" class="w-3 h-3 text-[#f84464] fill-[#f84464]"></i>
+                        <span>{{ turf.rating }}</span>
+                        <span class="text-slate-400 font-normal">({{ turf.rating_count }} reviews)</span>
+                    </div>
+
+                    <!-- Promoted / Sport Badge Overlay -->
+                    <div class="absolute top-2 left-2 flex gap-1">
+                        {% for sp in turf.sports.all|slice:":1" %}
+                        <span class="px-2 py-0.5 rounded text-[10px] font-extrabold uppercase tracking-wide bg-[#333545]/90 text-white backdrop-blur-xs">
+                            {{ sp.name }}
+                        </span>
+                        {% endfor %}
+                    </div>
+                </a>
+
+                <!-- Card Details -->
+                <div class="p-3.5 flex-1 flex flex-col justify-between">
+                    <div>
+                        <a href="{% url 'turf_detail' turf.slug %}" class="block">
+                            <h3 class="text-sm sm:text-base font-extrabold text-slate-900 group-hover:text-[#f84464] transition-colors line-clamp-1">
+                                {{ turf.name }}
+                            </h3>
+                        </a>
+                        <p class="mt-1 text-xs text-slate-500 flex items-center gap-1 line-clamp-1">
+                            <i data-lucide="map-pin" class="w-3.5 h-3.5 text-slate-400 flex-shrink-0"></i>
+                            <span>{{ turf.location }}</span>
+                        </p>
+                    </div>
+
+                    <!-- Price & CTA -->
+                    <div class="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between">
+                        <div>
+                            <span class="text-[10px] uppercase font-bold text-slate-400 block -mb-0.5">Starting</span>
+                            <span class="text-sm font-black text-slate-900">₹{{ turf.price_per_hour|floatformat:0 }}<span class="text-[10px] font-normal text-slate-500">/hr</span></span>
+                        </div>
+                        <a href="{% url 'booking' turf.id %}" class="px-3.5 py-1.5 rounded-md bg-[#f84464] hover:bg-[#e03554] text-white text-xs font-bold shadow-xs transition-all flex items-center gap-1">
+                            <span>Book</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-span-full py-14 px-6 text-center bg-white rounded-3xl border border-slate-200/90 shadow-sm max-w-3xl mx-auto my-4">
+                <div class="w-16 h-16 rounded-2xl bg-rose-50 text-[#f84464] border border-rose-100 flex items-center justify-center mx-auto mb-4 shadow-sm">
+                    <i data-lucide="map-pin-off" class="w-8 h-8"></i>
+                </div>
+                <h3 class="text-xl font-black text-slate-900 tracking-tight">No Venues Listed in {{ current_city }} Yet</h3>
+                <p class="text-xs sm:text-sm text-slate-500 mt-2 max-w-md mx-auto leading-relaxed">
+                    We're actively onboarding top sports grounds and arenas in {{ current_city }}. Check out live venues in our active cities or explore all locations nationwide:
+                </p>
+                <div class="mt-6 flex flex-wrap items-center justify-center gap-2.5">
+                    <a href="{% url 'set_city' 'Rajkot' %}" class="px-4 py-2 rounded-xl bg-slate-900 text-white hover:bg-slate-800 text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm">
+                        <i data-lucide="map-pin" class="w-3.5 h-3.5 text-[#f84464]"></i>
+                        <span>Explore Rajkot</span>
+                    </a>
+                    <a href="{% url 'set_city' 'Ahmedabad' %}" class="px-4 py-2 rounded-xl bg-slate-900 text-white hover:bg-slate-800 text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm">
+                        <i data-lucide="map-pin" class="w-3.5 h-3.5 text-[#f84464]"></i>
+                        <span>Explore Ahmedabad</span>
+                    </a>
+                    <a href="{% url 'set_city' 'Mumbai' %}" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold transition-all flex items-center gap-1.5">
+                        <i data-lucide="map-pin" class="w-3.5 h-3.5 text-slate-400"></i>
+                        <span>Mumbai</span>
+                    </a>
+                    <a href="{% url 'set_city' 'Bengaluru' %}" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold transition-all flex items-center gap-1.5">
+                        <i data-lucide="map-pin" class="w-3.5 h-3.5 text-slate-400"></i>
+                        <span>Bengaluru</span>
+                    </a>
+                    <a href="{% url 'turf_list' %}?all_cities=1" class="px-4 py-2 rounded-xl bg-[#f84464] hover:bg-[#e03554] text-white text-xs font-bold transition-all shadow-md shadow-rose-500/20 flex items-center gap-1.5">
+                        <i data-lucide="globe" class="w-3.5 h-3.5"></i>
+                        <span>Browse All Cities</span>
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    <!-- ========================================================================= -->
+    <!-- 4. BOOKMYSHOW PROMOTIONAL STREAM / MEMBERSHIP PASS BANNER -->
+    <!-- ========================================================================= -->
+    <section class="rounded-2xl overflow-hidden bg-gradient-to-r from-[#2b3148] via-[#1f2533] to-[#2b3148] border border-slate-700 p-6 sm:p-8 text-white shadow-xl relative">
+        <div class="flex flex-col lg:flex-row items-center justify-between gap-6 relative z-10">
+            <div class="flex items-center gap-4 text-center lg:text-left">
+                <div class="w-14 h-14 rounded-2xl bg-[#f84464] text-white flex items-center justify-center font-black text-2xl shadow-lg flex-shrink-0">
+                    <i data-lucide="ticket" class="w-7 h-7"></i>
+                </div>
+                <div>
+                    <span class="inline-block px-2.5 py-0.5 rounded text-[10px] font-extrabold uppercase tracking-wider bg-rose-500/20 text-[#f84464] border border-[#f84464]/30 mb-1">
+                        BookMyTurf Exclusive
+                    </span>
+                    <h3 class="text-lg sm:text-2xl font-black tracking-tight">Play More, Save More with Weekend Turf Passes</h3>
+                    <p class="text-xs sm:text-sm text-slate-300 mt-1 max-w-xl">
+                        Book regular box cricket matches or weekly football friendlies with priority slot reservations and free equipment rental across {{ current_city }}.
+                    </p>
+                </div>
+            </div>
+            <div class="flex items-center gap-3">
+                <a href="{% url 'turf_list' %}" class="px-5 py-2.5 rounded-lg bg-[#f84464] hover:bg-[#e03554] text-white font-bold text-xs sm:text-sm shadow-md transition-all whitespace-nowrap">
+                    Explore {{ current_city }} Venues
+                </a>
+                <a href="{% url 'ticket' %}" class="px-4 py-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-600 text-white font-bold text-xs sm:text-sm transition-colors whitespace-nowrap">
+                    View My Passes
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========================================================================= -->
+    <!-- 5. TOP RATED / TRENDING ARENAS -->
+    <!-- ========================================================================= -->
+    {% if trending_turfs.exists %}
+    <section>
+        <div class="flex items-end justify-between mb-5">
+            <div>
+                <h2 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+                    <span>Top Rated & Trending in {{ current_city|default:'Rajkot' }}</span>
+                </h2>
+                <p class="text-xs sm:text-sm text-slate-500 mt-0.5">Player favorites with 4.7+ star player ratings</p>
+            </div>
+            <a href="{% url 'turf_list' %}?city={{ current_city }}" class="text-xs sm:text-sm font-bold text-[#f84464] hover:underline flex items-center gap-1">
+                <span>View All ›</span>
+            </a>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for turf in trending_turfs|slice:":6" %}
+            <div class="bg-white rounded-2xl overflow-hidden border border-slate-200/90 shadow-xs hover:shadow-lg transition-all group flex flex-col justify-between">
+                <div>
+                    <!-- Image -->
+                    <a href="{% url 'turf_detail' turf.slug %}" class="block relative aspect-[16/9] overflow-hidden bg-slate-100">
+                        <img src="{{ turf.image_url|default:'https://images.unsplash.com/photo-1579952363873-27f3bade9f55?auto=format&fit=crop&w=800&q=80' }}" alt="{{ turf.name }}" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1579952363873-27f3bade9f55?auto=format&fit=crop&w=800&q=80';" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                        
+                        <div class="absolute top-3 left-3 flex gap-1.5">
+                            {% for sport in turf.sports.all %}
+                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-white/90 text-slate-800 shadow-sm">
+                                {{ sport.name }}
+                            </span>
+                            {% endfor %}
+                        </div>
+
+                        <div class="absolute bottom-3 right-3 px-2.5 py-1 rounded-full bg-slate-900/80 backdrop-blur-xs text-amber-400 text-xs font-bold flex items-center gap-1 shadow">
+                            <i data-lucide="star" class="w-3.5 h-3.5 fill-amber-400"></i>
+                            <span>{{ turf.rating }}</span>
+                        </div>
+                    </a>
+
+                    <!-- Details -->
+                    <div class="p-5">
+                        <a href="{% url 'turf_detail' turf.slug %}" class="block">
+                            <h3 class="text-base font-extrabold text-slate-900 group-hover:text-[#f84464] transition-colors line-clamp-1">
+                                {{ turf.name }}
+                            </h3>
+                        </a>
+                        <p class="mt-1.5 text-xs text-slate-500 flex items-center gap-1.5">
+                            <i data-lucide="map-pin" class="w-3.5 h-3.5 text-[#f84464] flex-shrink-0"></i>
+                            <span class="truncate">{{ turf.location }}</span>
+                        </p>
+                        
+                        <div class="mt-3 flex flex-wrap gap-1.5">
+                            {% for amen in turf.amenities.all|slice:":3" %}
+                            <span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-100 text-slate-600">
+                                {{ amen.name }}
+                            </span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer Action -->
+                <div class="px-5 pb-5 pt-3 border-t border-slate-100 flex items-center justify-between">
+                    <div>
+                        <span class="text-[10px] uppercase font-bold text-slate-400">Hourly Rate</span>
+                        <div class="text-base font-black text-slate-900">₹{{ turf.price_per_hour|floatformat:0 }}<span class="text-xs font-normal text-slate-500">/hr</span></div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <a href="{% url 'turf_detail' turf.slug %}" class="px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors">
+                            Details
+                        </a>
+                        <a href="{% url 'booking' turf.id %}" class="px-4 py-1.5 rounded-lg bg-[#f84464] hover:bg-[#e03554] text-white text-xs font-bold shadow-xs transition-all flex items-center gap-1">
+                            <span>Book Now</span>
+                            <i data-lucide="arrow-right" class="w-3 h-3"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+    {% elif suggested_turfs.exists %}
+    <section>
+        <div class="flex items-end justify-between mb-5">
+            <div>
+                <h2 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+                    <span>Popular Arenas in Nearby Cities</span>
+                </h2>
+                <p class="text-xs sm:text-sm text-slate-500 mt-0.5">Top-rated player destinations while we onboard venues in {{ current_city }}</p>
+            </div>
+            <a href="{% url 'turf_list' %}?all_cities=1" class="text-xs sm:text-sm font-bold text-[#f84464] hover:underline flex items-center gap-1">
+                <span>Browse All Cities ›</span>
+            </a>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for turf in suggested_turfs|slice:":6" %}
+            <div class="bg-white rounded-2xl overflow-hidden border border-slate-200/90 shadow-xs hover:shadow-lg transition-all group flex flex-col justify-between">
+                <div>
+                    <!-- Image -->
+                    <a href="{% url 'turf_detail' turf.slug %}" class="block relative aspect-[16/9] overflow-hidden bg-slate-100">
+                        <img src="{{ turf.image_url|default:'https://images.unsplash.com/photo-1579952363873-27f3bade9f55?auto=format&fit=crop&w=800&q=80' }}" alt="{{ turf.name }}" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1579952363873-27f3bade9f55?auto=format&fit=crop&w=800&q=80';" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                        
+                        <div class="absolute top-3 left-3 flex gap-1.5">
+                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-brand-600 text-white shadow-sm">
+                                {{ turf.city }}
+                            </span>
+                        </div>
+
+                        <div class="absolute bottom-3 right-3 px-2.5 py-1 rounded-full bg-slate-900/80 backdrop-blur-xs text-amber-400 text-xs font-bold flex items-center gap-1 shadow">
+                            <i data-lucide="star" class="w-3.5 h-3.5 fill-amber-400"></i>
+                            <span>{{ turf.rating }}</span>
+                        </div>
+                    </a>
+
+                    <!-- Details -->
+                    <div class="p-5">
+                        <a href="{% url 'turf_detail' turf.slug %}" class="block">
+                            <h3 class="text-base font-extrabold text-slate-900 group-hover:text-[#f84464] transition-colors line-clamp-1">
+                                {{ turf.name }}
+                            </h3>
+                        </a>
+                        <p class="mt-1.5 text-xs text-slate-500 flex items-center gap-1.5">
+                            <i data-lucide="map-pin" class="w-3.5 h-3.5 text-[#f84464] flex-shrink-0"></i>
+                            <span class="truncate">{{ turf.location }} • {{ turf.city }}</span>
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Footer Action -->
+                <div class="px-5 pb-5 pt-3 border-t border-slate-100 flex items-center justify-between">
+                    <div>
+                        <span class="text-[10px] uppercase font-bold text-slate-400">Hourly Rate</span>
+                        <div class="text-base font-black text-slate-900">₹{{ turf.price_per_hour|floatformat:0 }}<span class="text-xs font-normal text-slate-500">/hr</span></div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <a href="{% url 'turf_detail' turf.slug %}" class="px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors">
+                            Details
+                        </a>
+                        <a href="{% url 'booking' turf.id %}" class="px-4 py-1.5 rounded-lg bg-[#f84464] hover:bg-[#e03554] text-white text-xs font-bold shadow-xs transition-all flex items-center gap-1">
+                            <span>Book Now</span>
+                            <i data-lucide="arrow-right" class="w-3 h-3"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- ========================================================================= -->
+    <!-- 6. WHY BOOK ON BOOKMYTURF (BookMyShow Value Propositions) -->
+    <!-- ========================================================================= -->
+    <section class="bg-white rounded-2xl p-6 sm:p-10 border border-slate-200 shadow-xs">
+        <div class="text-center max-w-2xl mx-auto mb-8">
+            <h2 class="text-xl sm:text-3xl font-black text-slate-900 tracking-tight">Why Choose BookMyTurf in {{ current_city|default:'Rajkot' }}</h2>
+            <p class="text-xs sm:text-sm text-slate-500 mt-1">Gujarat’s most reliable sports venue reservation network</p>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div class="p-5 rounded-xl bg-slate-50 border border-slate-100 text-center flex flex-col items-center">
+                <div class="w-12 h-12 rounded-xl bg-rose-50 text-[#f84464] flex items-center justify-center mb-3">
+                    <i data-lucide="zap" class="w-6 h-6"></i>
+                </div>
+                <h3 class="text-sm font-bold text-slate-900">Instant Confirmation</h3>
+                <p class="text-xs text-slate-500 mt-1.5 leading-relaxed">No waiting or back-and-forth phone calls. Lock your preferred court in under 60 seconds.</p>
+            </div>
+
+            <div class="p-5 rounded-xl bg-slate-50 border border-slate-100 text-center flex flex-col items-center">
+                <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-3">
+                    <i data-lucide="shield-check" class="w-6 h-6"></i>
+                </div>
+                <h3 class="text-sm font-bold text-slate-900">Zero Double-Booking</h3>
+                <p class="text-xs text-slate-500 mt-1.5 leading-relaxed">Atomic database slot locking ensures your reserved time is 100% exclusive to your team.</p>
+            </div>
+
+            <div class="p-5 rounded-xl bg-slate-50 border border-slate-100 text-center flex flex-col items-center">
+                <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center mb-3">
+                    <i data-lucide="map-pin" class="w-6 h-6"></i>
+                </div>
+                <h3 class="text-sm font-bold text-slate-900">Verified Quality Courts</h3>
+                <p class="text-xs text-slate-500 mt-1.5 leading-relaxed">All turfs verified for high mast lighting, clean changerooms, drinking water, and parking.</p>
+            </div>
+
+            <div class="p-5 rounded-xl bg-slate-50 border border-slate-100 text-center flex flex-col items-center">
+                <div class="w-12 h-12 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center mb-3">
+                    <i data-lucide="ticket" class="w-6 h-6"></i>
+                </div>
+                <h3 class="text-sm font-bold text-slate-900">Digital Match Passes</h3>
+                <p class="text-xs text-slate-500 mt-1.5 leading-relaxed">Show your QR pass on your phone at entry for instant contactless check-in.</p>
+            </div>
+        </div>
+    </section>
+
+</div>
+
+<!-- Hero Carousel Auto-Play & Navigation Script -->
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const slides = document.querySelectorAll('.bms-slide');
+        const dots = document.querySelectorAll('.carousel-dot');
+        const prevBtn = document.getElementById('carouselPrevBtn');
+        const nextBtn = document.getElementById('carouselNextBtn');
+        let currentSlide = 0;
+        let slideInterval = null;
+
+        function showSlide(index) {
+            if (!slides.length) return;
+            if (index < 0) index = slides.length - 1;
+            if (index >= slides.length) index = 0;
+            currentSlide = index;
+
+            slides.forEach((slide, i) => {
+                if (i === currentSlide) {
+                    slide.classList.remove('opacity-0', 'pointer-events-none');
+                    slide.classList.add('opacity-100');
+                } else {
+                    slide.classList.remove('opacity-100');
+                    slide.classList.add('opacity-0', 'pointer-events-none');
+                }
+            });
+
+            dots.forEach((dot, i) => {
+                if (i === currentSlide) {
+                    dot.classList.remove('bg-white/50');
+                    dot.classList.add('bg-white', 'w-6');
+                } else {
+                    dot.classList.remove('bg-white', 'w-6');
+                    dot.classList.add('bg-white/50', 'w-2.5');
+                }
+            });
+        }
+
+        function nextSlide() {
+            showSlide(currentSlide + 1);
+        }
+
+        function prevSlide() {
+            showSlide(currentSlide - 1);
+        }
+
+        if (nextBtn) nextBtn.addEventListener('click', () => { nextSlide(); resetTimer(); });
+        if (prevBtn) prevBtn.addEventListener('click', () => { prevSlide(); resetTimer(); });
+
+        dots.forEach((dot, idx) => {
+            dot.addEventListener('click', () => {
+                showSlide(idx);
+                resetTimer();
+            });
+        });
+
+        function resetTimer() {
+            clearInterval(slideInterval);
+            slideInterval = setInterval(nextSlide, 5000);
+        }
+
+        // Start Auto-play
+        resetTimer();
+    });
+</script>
+{% endblock %}

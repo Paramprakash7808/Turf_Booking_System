@@ -1,0 +1,948 @@
+{% extends 'base.html' %}
+
+{% block title %}Book Slots: {{ turf.name }} - BookMyTurf {{ current_city|default:'Rajkot' }}{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="mb-6 flex items-center justify-between">
+        <a href="{% url 'turf_detail' turf.slug %}" class="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-slate-900 transition-colors">
+            <i data-lucide="arrow-left" class="w-4 h-4"></i> Back to Venue Details
+        </a>
+        <span class="text-xs font-semibold text-slate-400">Step 1 of 2: Select Date & Time Slots</span>
+    </div>
+
+    <!-- BookMyShow Dark Header -->
+    <div class="bg-[#333545] text-white rounded-2xl p-6 sm:p-8 mb-8 flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-xl border border-slate-700">
+        <div>
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-rose-500/20 text-rose-300 border border-rose-400/30 text-xs font-bold mb-2">
+                <i data-lucide="zap" class="w-3.5 h-3.5 text-[#f84464]"></i> Live Slot Reservation
+            </div>
+            <h1 class="text-2xl sm:text-3xl font-black tracking-tight">{{ turf.name }}</h1>
+            <p class="mt-1 text-slate-300 text-sm flex items-center gap-1.5">
+                <i data-lucide="map-pin" class="w-4 h-4 text-[#f84464]"></i> {{ turf.location }} • {{ turf.city }}
+            </p>
+        </div>
+        <div class="text-left md:text-right">
+            <span class="text-xs text-slate-400 uppercase tracking-wider font-semibold">Standard Rate</span>
+            <div class="text-3xl font-black text-white">₹{{ turf.price_per_hour|floatformat:0 }}<span class="text-xs text-slate-400 font-normal"> / hour slot</span></div>
+        </div>
+    </div>
+
+    <!-- Multi-Branch Dynamic Organization Synchronization Banner -->
+    {% if turf.organization %}
+    <div id="multiBranchSyncBanner" class="bg-gradient-to-r from-slate-900 via-slate-850 to-slate-900 border border-slate-700/80 rounded-3xl p-5 mb-8 shadow-lg text-white">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div class="flex items-center gap-3.5">
+                <div class="w-10 h-10 rounded-2xl bg-brand-500/20 text-brand-400 border border-brand-500/30 flex items-center justify-center font-bold">
+                    <i data-lucide="network" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-sm font-extrabold text-white">{{ turf.organization.name }}</span>
+                        <span id="syncLivePulse" class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                            <span>Live Synced across {{ turf.organization.branches.count }} Branches</span>
+                        </span>
+                    </div>
+                    <p class="text-xs text-slate-400 mt-0.5">
+                        Current Branch: <span class="text-brand-300 font-bold">{{ turf.branch.name|default:turf.location }}</span> • Live real-time reservation updates
+                    </p>
+                </div>
+            </div>
+
+            <!-- Sibling Branches Real-time Status Badges -->
+            <div id="syncBranchesList" class="flex flex-wrap items-center gap-2">
+                {% for b in turf.organization.branches.all %}
+                <span class="px-3 py-1.5 rounded-xl text-xs font-bold {% if b.id == turf.branch.id %}bg-brand-600 text-white shadow-sm ring-1 ring-white/20{% else %}bg-slate-800 text-slate-300 border border-slate-700{% endif %} flex items-center gap-1.5">
+                    <i data-lucide="map-pin" class="w-3.5 h-3.5 text-slate-400"></i>
+                    <span>{{ b.name }}</span>
+                </span>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Booking Form -->
+    <form id="bookingForm" method="POST" action="{% url 'booking' turf.id %}" data-price-per-hour="{{ turf.price_per_hour|floatformat:0 }}" data-booking-url="{% url 'booking' turf.id %}">
+        {% csrf_token %}
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            <!-- Left: Date & Time Slot Picker -->
+            <div class="lg:col-span-2 space-y-8">
+                <!-- 1. Select Date -->
+                <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-sm">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+                            <span class="w-6 h-6 rounded-full bg-brand-100 text-brand-700 text-xs font-bold flex items-center justify-center">1</span>
+                            Select Play Date
+                        </h2>
+                    </div>
+
+                    <div class="max-w-xs">
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Choose Date</label>
+                        <input type="date" id="datePicker" name="date" value="{{ selected_date_str }}" min="{{ today_str }}" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500 shadow-inner">
+                    </div>
+                </div>
+
+                <!-- 2. Select Time Slots -->
+                <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-sm">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+                        <div>
+                            <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+                                <span class="w-6 h-6 rounded-full bg-brand-100 text-brand-700 text-xs font-bold flex items-center justify-center">2</span>
+                                Select Time Slot(s)
+                            </h2>
+                            <p class="text-xs text-slate-500 mt-1">Select one or multiple hours. Click any slot to toggle your selection.</p>
+                        </div>
+                        <!-- Counter & Quick Actions -->
+                        <div class="flex items-center gap-2.5">
+                            <span id="selectedCountBadge" class="hidden px-3 py-1 rounded-full text-xs font-bold bg-brand-50 text-brand-700 border border-brand-200 transition-all">
+                                0 slots selected
+                            </span>
+                            <button type="button" id="clearSlotsBtn" class="hidden text-xs font-bold text-rose-500 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 px-2.5 py-1 rounded-xl transition-all cursor-pointer">
+                                Clear all
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Legend -->
+                    <div class="flex flex-wrap items-center gap-4 text-xs font-semibold py-3 border-y border-slate-100 mb-6">
+                        <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-white border-2 border-slate-300"></span> Available</span>
+                        <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-brand-600"></span> Selected</span>
+                        <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-slate-200"></span> Booked</span>
+                        <span id="liveSlotSyncIndicator" class="ml-auto text-[11px] text-emerald-600 font-bold flex items-center gap-1.5 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                            Live Sync Active
+                        </span>
+                    </div>
+
+                    <!-- Notification Banner for live slot changes -->
+                    <div id="slotConflictAlert" class="hidden mb-4 p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs font-bold flex items-center gap-2">
+                        <i data-lucide="alert-triangle" class="w-4 h-4 text-amber-600"></i>
+                        <span id="slotConflictMsg">Notice: Slot availability updated across organization branches.</span>
+                    </div>
+
+                    <!-- Hidden container holding selected slot ids -->
+                    <div id="selectedSlotsInputs"></div>
+
+                    <!-- Slots Grid -->
+                    <div id="slotsGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                        {% for slot in time_slots %}
+                        {% if slot.id in booked_slot_ids %}
+                        <!-- Booked Slot -->
+                        <div data-slot-id="{{ slot.id }}" data-slot-label="{{ slot.label }}" class="p-3.5 rounded-2xl border border-slate-200 bg-slate-100 text-slate-400 flex flex-col items-center justify-center text-center cursor-not-allowed opacity-60 select-none">
+                            <span class="slot-label text-xs font-bold">{{ slot.label }}</span>
+                            <span class="slot-badge text-[10px] uppercase font-bold text-rose-500 mt-1">Booked</span>
+                        </div>
+                        {% else %}
+                        <!-- Available Slot -->
+                        <button type="button" data-slot-id="{{ slot.id }}" data-slot-label="{{ slot.label }}" class="slot-btn p-3.5 rounded-2xl border border-slate-200 bg-white hover:border-brand-500 hover:bg-brand-50/50 text-slate-800 transition-all duration-200 flex flex-col items-center justify-center text-center focus:outline-none group relative cursor-pointer shadow-sm hover:shadow">
+                            <span class="slot-label text-xs font-bold group-hover:text-brand-700 transition-colors">{{ slot.label }}</span>
+                            <span class="slot-badge text-[10px] font-semibold text-emerald-600 mt-1 transition-colors">Available</span>
+                        </button>
+                        {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- 3. Player Details -->
+                <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-sm space-y-4">
+                    <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2 mb-4">
+                        <span class="w-6 h-6 rounded-full bg-brand-100 text-brand-700 text-xs font-bold flex items-center justify-center">3</span>
+                        Player Information
+                    </h2>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Player Name *</label>
+                            <input type="text" id="bookingPlayerName" name="player_name" value="{{ user.get_full_name|default:user.username }}" required minlength="2" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 transition-all">
+                            <span id="bookingNameError" class="text-[11px] text-rose-500 mt-1 hidden font-semibold"></span>
+                        </div>
+                        <div>
+                            <div class="flex items-center justify-between mb-1.5">
+                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-500">Contact Phone *</label>
+                            </div>
+                            <input type="tel" id="bookingPlayerPhone" name="player_phone" value="{{ user.profile.phone|default:'' }}" placeholder="+91 98765 43210" required maxlength="15" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 transition-all">
+                            <span id="bookingPhoneError" class="text-[11px] text-rose-500 mt-1 hidden font-semibold"></span>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Special Requests (Optional)</label>
+                        <textarea name="notes" rows="2" placeholder="e.g. Need extra practice balls or bibs..." class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"></textarea>
+                    </div>
+                </div>
+
+                <!-- 4. Select Payment Method (Razorpay & Cash on Counter) -->
+                <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-sm space-y-4">
+                    <div class="flex items-center justify-between mb-1">
+                        <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+                            <span class="w-6 h-6 rounded-full bg-brand-100 text-brand-700 text-xs font-bold flex items-center justify-center">4</span>
+                            Select Payment Method
+                        </h2>
+                        <span class="text-xs font-semibold text-emerald-600 flex items-center gap-1">
+                            <i data-lucide="shield-check" class="w-3.5 h-3.5"></i> 100% Safe Checkout
+                        </span>
+                    </div>
+                    <p class="text-xs text-slate-500 mb-4">Choose your preferred payment method to secure your slot reservation:</p>
+
+                    <!-- Hidden inputs for payment form submission -->
+                    <input type="hidden" name="payment_method" id="selectedPaymentMethod" value="RAZORPAY">
+                    <input type="hidden" name="razorpay_payment_id" id="razorpayPaymentId" value="">
+
+                    <!-- Payment Options Grid -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        
+                        <!-- Option 1: Razorpay Online (Instant UPI, Cards, NetBanking) -->
+                        <div id="payOptionRazorpay" onclick="selectPaymentMethod('RAZORPAY')" class="relative border-2 border-brand-600 bg-brand-50/40 rounded-2xl p-5 cursor-pointer transition-all duration-200 shadow-sm hover:shadow group select-none">
+                            <div class="flex items-start justify-between">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-[#0c2340] to-blue-600 text-white flex items-center justify-center shadow-md">
+                                        <i data-lucide="credit-card" class="w-5 h-5"></i>
+                                    </div>
+                                    <div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-sm font-extrabold text-slate-900">Razorpay Online</span>
+                                            <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-emerald-100 text-emerald-800 border border-emerald-200">
+                                                Instant
+                                            </span>
+                                        </div>
+                                        <p class="text-xs text-slate-500 mt-0.5">UPI, GPay, PhonePe, Cards, NetBanking</p>
+                                    </div>
+                                </div>
+                                <div id="radioRazorpayDot" class="w-5 h-5 rounded-full border-2 border-brand-600 flex items-center justify-center bg-brand-600 text-white text-[10px] font-bold">
+                                    ✓
+                                </div>
+                            </div>
+
+                            <div class="mt-4 pt-3 border-t border-slate-200/70 flex flex-wrap items-center justify-between gap-2 text-[11px]">
+                                <span class="flex items-center gap-1 font-bold text-blue-700">
+                                    <i data-lucide="shield-check" class="w-3.5 h-3.5 text-blue-600"></i>
+                                    256-Bit Razorpay Secured
+                                </span>
+                                <span class="text-slate-500 font-medium">
+                                    Instant pass activation
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Option 2: Cash on Counter (Pay at Venue Desk) -->
+                        <div id="payOptionCash" onclick="selectPaymentMethod('CASH')" class="relative border-2 border-slate-200 bg-white hover:border-slate-300 rounded-2xl p-5 cursor-pointer transition-all duration-200 shadow-sm hover:shadow group select-none">
+                            <div class="flex items-start justify-between">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-11 h-11 rounded-2xl bg-amber-500/15 text-amber-700 border border-amber-500/30 flex items-center justify-center shadow-sm">
+                                        <i data-lucide="banknote" class="w-5 h-5"></i>
+                                    </div>
+                                    <div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-sm font-extrabold text-slate-900">Cash on Counter</span>
+                                            <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-amber-100 text-amber-800 border border-amber-200">
+                                                Pay at Venue
+                                            </span>
+                                        </div>
+                                        <p class="text-xs text-slate-500 mt-0.5">Pay at reception desk before match kickoff</p>
+                                    </div>
+                                </div>
+                                <div id="radioCashDot" class="w-5 h-5 rounded-full border-2 border-slate-300 flex items-center justify-center bg-white text-transparent text-[10px] font-bold">
+                                    ✓
+                                </div>
+                            </div>
+
+                            <div class="mt-4 pt-3 border-t border-slate-200/70 flex flex-wrap items-center justify-between gap-2 text-[11px]">
+                                <span class="flex items-center gap-1 font-bold text-amber-800">
+                                    <i data-lucide="store" class="w-3.5 h-3.5 text-amber-600"></i>
+                                    Pay at Front Desk
+                                </span>
+                                <span class="text-slate-500 font-medium">
+                                    Zero advance charge
+                                </span>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Payment Guidance Notice -->
+                    <div id="paymentNoticeBox" class="p-3.5 rounded-2xl bg-blue-50/70 border border-blue-200/80 text-xs text-blue-900 flex items-start gap-2.5 transition-all">
+                        <i id="paymentNoticeIcon" data-lucide="info" class="w-4 h-4 text-blue-600 shrink-0 mt-0.5"></i>
+                        <span id="paymentNoticeText">
+                            You have selected <strong>Razorpay Online</strong>. Fast contactless checkout with Google Pay, PhonePe, Paytm, all Cards, or NetBanking.
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Order Summary Sidebar -->
+            <div class="lg:col-span-1">
+                <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-sm sticky top-24 space-y-6">
+                    <h3 class="text-lg font-bold text-slate-900 border-b border-slate-100 pb-3 flex items-center justify-between">
+                        <span>Booking Summary</span>
+                        <span id="summaryBadge" class="text-xs font-bold text-brand-600 bg-brand-50 px-2.5 py-0.5 rounded-full">0 hrs</span>
+                    </h3>
+
+                    <div class="space-y-4 text-sm">
+                        <div class="flex justify-between items-center text-slate-600">
+                            <span class="font-medium shrink-0">Turf Venue:</span>
+                            <span class="font-bold text-slate-900 text-right">{{ turf.name }}</span>
+                        </div>
+                        <div class="flex justify-between items-center text-slate-600">
+                            <span class="font-medium shrink-0">Selected Date:</span>
+                            <span id="summaryDate" class="font-bold text-slate-900 text-right">{{ selected_date_str }}</span>
+                        </div>
+                        <div class="flex flex-col gap-1.5 text-slate-600">
+                            <div class="flex justify-between items-center">
+                                <span class="font-medium shrink-0">Time Slots:</span>
+                                <span id="summarySlotCountText" class="font-bold text-slate-900 text-right">0 selected</span>
+                            </div>
+                            <div id="summarySlotsList" class="flex flex-wrap gap-1.5 justify-end max-h-36 overflow-y-auto py-1">
+                                <span class="text-xs text-amber-600 font-semibold italic">No slots selected yet</span>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center text-slate-600 border-t border-slate-100 pt-3">
+                            <span class="font-medium shrink-0">Total Duration:</span>
+                            <span id="summaryDuration" class="font-bold text-slate-900 text-right">0 Hours</span>
+                        </div>
+                    </div>
+
+                    <div class="pt-4 border-t border-slate-100 space-y-2.5">
+                        <div class="flex justify-between items-center text-sm text-slate-600">
+                            <span class="shrink-0">Hourly Rate:</span>
+                            <span class="font-semibold text-slate-800 text-right">₹{{ turf.price_per_hour|floatformat:0 }} / hour</span>
+                        </div>
+                        <div class="flex justify-between items-center text-sm text-slate-600">
+                            <span class="shrink-0">Court Fee (<span id="summaryHoursMulti">0</span> hr<span id="summaryHoursPlural"></span>):</span>
+                            <span id="summaryCourtFee" class="font-bold text-slate-900 text-right">₹0</span>
+                        </div>
+                        <div class="flex justify-between items-center text-sm text-slate-600">
+                            <span class="shrink-0">Payment Mode:</span>
+                            <span id="summaryPaymentMethod" class="font-bold text-blue-600 text-right">Razorpay Online</span>
+                        </div>
+                        <div class="flex justify-between items-center text-sm text-slate-600">
+                            <span class="shrink-0">Platform Fee:</span>
+                            <span class="text-emerald-600 font-bold text-right">FREE</span>
+                        </div>
+                        <div class="flex justify-between items-baseline text-base font-black text-slate-900 pt-3 border-t border-slate-100">
+                            <span class="shrink-0">Total Payable:</span>
+                            <span id="summaryTotalPrice" class="text-2xl text-brand-600 font-black text-right">₹0</span>
+                        </div>
+                    </div>
+
+                    {% if user.is_authenticated %}
+                    <button type="submit" id="submitBtn" disabled class="w-full py-4 rounded-2xl bg-slate-200 text-slate-400 font-extrabold text-sm transition-all cursor-not-allowed shadow-none">
+                        Select a Slot to Continue
+                    </button>
+                    {% else %}
+                    <a href="{% url 'login' %}?next=/booking/{{ turf.id }}/" class="w-full py-4 rounded-2xl bg-brand-600 hover:bg-brand-500 text-white font-extrabold text-sm transition-all flex items-center justify-center gap-2 shadow-lg shadow-brand-600/30">
+                        <i data-lucide="log-in" class="w-4 h-4"></i>
+                        <span>Login to Confirm Booking</span>
+                    </a>
+                    {% endif %}
+
+                    <p class="text-[11px] text-slate-400 text-center leading-relaxed">
+                        By confirming, you agree to the turf venue guidelines and 24h cancellation policy.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Floating Mobile Booking Summary Bar (visible on < lg when slots are selected) -->
+<div id="mobileBookingBar" class="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200 px-4 py-3 shadow-2xl lg:hidden flex items-center justify-between gap-3 transform translate-y-full transition-transform duration-300">
+    <div>
+        <span id="mobileSelectedCount" class="text-[10px] uppercase font-bold text-slate-500 tracking-wider block">0 Slots Selected</span>
+        <div id="mobileTotalPrice" class="text-xl font-black text-brand-600">₹0</div>
+    </div>
+    <div class="flex items-center gap-2">
+        <button type="button" onclick="document.getElementById('summaryDate').scrollIntoView({behavior: 'smooth'})" class="px-3 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-700 bg-slate-50 hover:bg-slate-100 transition-colors cursor-pointer">
+            Summary
+        </button>
+        {% if user.is_authenticated %}
+        <button type="button" onclick="document.getElementById('bookingForm').requestSubmit()" id="mobileSubmitBtn" class="py-2.5 px-5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-extrabold text-xs shadow-md shadow-brand-600/30 flex items-center gap-1.5 cursor-pointer">
+            <span>Confirm</span>
+            <i data-lucide="arrow-right" class="w-4 h-4"></i>
+        </button>
+        {% else %}
+        <a href="{% url 'login' %}?next=/booking/{{ turf.id }}/" class="py-2.5 px-4 rounded-xl bg-brand-600 text-white font-extrabold text-xs flex items-center gap-1.5 shadow-md shadow-brand-600/30">
+            <span>Login</span>
+            <i data-lucide="arrow-right" class="w-4 h-4"></i>
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Razorpay Checkout Interactive Simulation Modal -->
+<div id="razorpayModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-sm transition-opacity">
+    <div class="bg-white rounded-3xl max-w-md w-full overflow-hidden shadow-2xl border border-slate-200 transform transition-all animate-fadeIn">
+        
+        <!-- Razorpay Dark Navy Header -->
+        <div class="bg-gradient-to-r from-[#072654] via-[#0c2340] to-[#143d73] text-white p-5 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-xl bg-blue-500/20 text-blue-400 border border-blue-400/30 flex items-center justify-center font-black text-lg shadow-sm">
+                    R
+                </div>
+                <div>
+                    <div class="text-sm font-black tracking-wide flex items-center gap-1.5">
+                        <span>Razorpay</span>
+                        <span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-blue-500/30 text-blue-200 border border-blue-400/20 uppercase tracking-wider">SECURED</span>
+                    </div>
+                    <div class="text-[10px] text-slate-300">Trusted Online Payment Gateway</div>
+                </div>
+            </div>
+            <button type="button" onclick="closeRazorpayModal()" class="text-slate-400 hover:text-white p-1.5 rounded-xl hover:bg-white/10 transition-colors cursor-pointer">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+
+        <!-- Order & Venue Snapshot -->
+        <div class="p-6 space-y-4">
+            <div class="bg-slate-50 rounded-2xl p-4 border border-slate-200/80">
+                <div class="flex items-start justify-between gap-2">
+                    <div>
+                        <span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">Paying To</span>
+                        <span class="text-sm font-extrabold text-slate-900 block mt-0.5">{{ turf.name }}</span>
+                        <span id="rzpModalSlots" class="text-xs text-slate-500 block mt-0.5">Time slots</span>
+                    </div>
+                    <div class="text-right shrink-0">
+                        <span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">Total Amount</span>
+                        <span id="rzpModalAmount" class="text-xl font-black text-brand-600 block mt-0.5">₹0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Razorpay Payment Methods Selection -->
+            <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Select Payment Method</label>
+                <div class="space-y-2 text-xs">
+                    
+                    <!-- 1. UPI -->
+                    <label class="flex items-center gap-3 p-3 rounded-2xl border-2 border-blue-600 bg-blue-50/50 cursor-pointer transition-all">
+                        <input type="radio" name="rzp_submethod" value="upi" checked class="text-blue-600 focus:ring-blue-500">
+                        <div class="flex-1">
+                            <span class="font-bold text-slate-900 block">UPI (Google Pay, PhonePe, Paytm, BHIM)</span>
+                            <span class="text-slate-500 text-[11px]">Instant UPI auto-debit & QR payment</span>
+                        </div>
+                        <i data-lucide="smartphone" class="w-4 h-4 text-blue-600 shrink-0"></i>
+                    </label>
+
+                    <!-- 2. Cards -->
+                    <label class="flex items-center gap-3 p-3 rounded-2xl border border-slate-200 hover:border-slate-300 cursor-pointer transition-all">
+                        <input type="radio" name="rzp_submethod" value="card" class="text-blue-600 focus:ring-blue-500">
+                        <div class="flex-1">
+                            <span class="font-bold text-slate-900 block">Credit & Debit Cards</span>
+                            <span class="text-slate-500 text-[11px]">Visa, MasterCard, RuPay, Maestro</span>
+                        </div>
+                        <i data-lucide="credit-card" class="w-4 h-4 text-slate-400 shrink-0"></i>
+                    </label>
+
+                    <!-- 3. NetBanking -->
+                    <label class="flex items-center gap-3 p-3 rounded-2xl border border-slate-200 hover:border-slate-300 cursor-pointer transition-all">
+                        <input type="radio" name="rzp_submethod" value="netbanking" class="text-blue-600 focus:ring-blue-500">
+                        <div class="flex-1">
+                            <span class="font-bold text-slate-900 block">Net Banking</span>
+                            <span class="text-slate-500 text-[11px]">SBI, HDFC, ICICI, Axis, Kotak & 50+ Banks</span>
+                        </div>
+                        <i data-lucide="landmark" class="w-4 h-4 text-slate-400 shrink-0"></i>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Security certification badges -->
+            <div class="flex items-center justify-center gap-2 text-[11px] text-slate-400 pt-1">
+                <i data-lucide="shield-check" class="w-4 h-4 text-emerald-500"></i>
+                <span>256-bit SSL encrypted • PCI-DSS Level 1 Compliant</span>
+            </div>
+
+            <!-- Action buttons inside modal -->
+            <div class="space-y-2 pt-2">
+                <button type="button" id="rzpPayNowBtn" onclick="processRazorpayPayment()" class="w-full py-4 bg-blue-600 hover:bg-blue-500 active:scale-[0.99] text-white font-black text-sm rounded-2xl flex items-center justify-center gap-2 shadow-lg shadow-blue-600/30 cursor-pointer transition-all">
+                    <span id="rzpPayNowText">Pay & Confirm Slot</span>
+                    <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                </button>
+                <button type="button" onclick="closeRazorpayModal()" class="w-full py-2.5 text-xs font-bold text-slate-500 hover:text-slate-800 transition-colors">
+                    Cancel & Return
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const bookingForm = document.getElementById('bookingForm');
+    const pricePerHour = parseFloat(bookingForm ? bookingForm.dataset.pricePerHour : 0) || 0;
+    const bookingBaseUrl = bookingForm ? bookingForm.dataset.bookingUrl : window.location.pathname;
+    const slotButtons = document.querySelectorAll('.slot-btn');
+    const inputsContainer = document.getElementById('selectedSlotsInputs');
+    const summarySlotsList = document.getElementById('summarySlotsList');
+    const summarySlotCountText = document.getElementById('summarySlotCountText');
+    const summaryDuration = document.getElementById('summaryDuration');
+    const summaryHoursMulti = document.getElementById('summaryHoursMulti');
+    const summaryHoursPlural = document.getElementById('summaryHoursPlural');
+    const summaryCourtFee = document.getElementById('summaryCourtFee');
+    const summaryTotalPrice = document.getElementById('summaryTotalPrice');
+    const summaryBadge = document.getElementById('summaryBadge');
+    const selectedCountBadge = document.getElementById('selectedCountBadge');
+    const clearSlotsBtn = document.getElementById('clearSlotsBtn');
+    const submitBtn = document.getElementById('submitBtn');
+    const datePicker = document.getElementById('datePicker');
+
+    // Store selected slots in Map: slotId -> { id, label }
+    const selectedSlots = new Map();
+    let currentPaymentMethod = 'RAZORPAY';
+
+    // Payment method selector
+    function selectPaymentMethod(method) {
+        currentPaymentMethod = method;
+        const methodInput = document.getElementById('selectedPaymentMethod');
+        if (methodInput) methodInput.value = method;
+
+        const optRazorpay = document.getElementById('payOptionRazorpay');
+        const optCash = document.getElementById('payOptionCash');
+        const dotRazorpay = document.getElementById('radioRazorpayDot');
+        const dotCash = document.getElementById('radioCashDot');
+        const noticeBox = document.getElementById('paymentNoticeBox');
+        const noticeText = document.getElementById('paymentNoticeText');
+        const noticeIcon = document.getElementById('paymentNoticeIcon');
+        const summaryMethod = document.getElementById('summaryPaymentMethod');
+
+        if (method === 'RAZORPAY') {
+            if (optRazorpay) {
+                optRazorpay.className = 'relative border-2 border-brand-600 bg-brand-50/40 rounded-2xl p-5 cursor-pointer transition-all duration-200 shadow-sm hover:shadow group select-none ring-2 ring-brand-500/20';
+            }
+            if (optCash) {
+                optCash.className = 'relative border-2 border-slate-200 bg-white hover:border-slate-300 rounded-2xl p-5 cursor-pointer transition-all duration-200 shadow-sm hover:shadow group select-none';
+            }
+            if (dotRazorpay) {
+                dotRazorpay.className = 'w-5 h-5 rounded-full border-2 border-brand-600 flex items-center justify-center bg-brand-600 text-white text-[10px] font-bold';
+            }
+            if (dotCash) {
+                dotCash.className = 'w-5 h-5 rounded-full border-2 border-slate-300 flex items-center justify-center bg-white text-transparent text-[10px] font-bold';
+            }
+            if (noticeBox) {
+                noticeBox.className = 'p-3.5 rounded-2xl bg-blue-50/80 border border-blue-200/80 text-xs text-blue-900 flex items-start gap-2.5 transition-all';
+            }
+            if (noticeText) {
+                noticeText.innerHTML = 'You have selected <strong>Razorpay Online</strong>. Fast contactless checkout with Google Pay, PhonePe, Paytm, all Cards, or NetBanking.';
+            }
+            if (summaryMethod) {
+                summaryMethod.innerText = 'Razorpay Online';
+                summaryMethod.className = 'font-bold text-blue-600 text-right';
+            }
+        } else {
+            if (optRazorpay) {
+                optRazorpay.className = 'relative border-2 border-slate-200 bg-white hover:border-slate-300 rounded-2xl p-5 cursor-pointer transition-all duration-200 shadow-sm hover:shadow group select-none';
+            }
+            if (optCash) {
+                optCash.className = 'relative border-2 border-amber-500 bg-amber-50/40 rounded-2xl p-5 cursor-pointer transition-all duration-200 shadow-sm hover:shadow group select-none ring-2 ring-amber-500/20';
+            }
+            if (dotRazorpay) {
+                dotRazorpay.className = 'w-5 h-5 rounded-full border-2 border-slate-300 flex items-center justify-center bg-white text-transparent text-[10px] font-bold';
+            }
+            if (dotCash) {
+                dotCash.className = 'w-5 h-5 rounded-full border-2 border-amber-600 flex items-center justify-center bg-amber-600 text-white text-[10px] font-bold';
+            }
+            if (noticeBox) {
+                noticeBox.className = 'p-3.5 rounded-2xl bg-amber-50/90 border border-amber-200 text-xs text-amber-900 flex items-start gap-2.5 transition-all';
+            }
+            if (noticeText) {
+                noticeText.innerHTML = 'You have selected <strong>Cash on Counter</strong>. Reserve online now with zero advance fee and pay cash directly at the venue front desk before match kickoff.';
+            }
+            if (summaryMethod) {
+                summaryMethod.innerText = 'Cash on Counter (Venue)';
+                summaryMethod.className = 'font-bold text-amber-700 text-right';
+            }
+        }
+
+        updateUI();
+    }
+
+    // Razorpay Simulation Modal Handlers
+    function openRazorpayModal(total, slotLabels) {
+        const modal = document.getElementById('razorpayModal');
+        const amountEl = document.getElementById('rzpModalAmount');
+        const slotsEl = document.getElementById('rzpModalSlots');
+        const payBtn = document.getElementById('rzpPayNowBtn');
+        const payText = document.getElementById('rzpPayNowText');
+
+        if (amountEl) amountEl.innerText = '₹' + total.toLocaleString('en-IN');
+        if (slotsEl) slotsEl.innerText = `${slotLabels || 'Selected Slots'}`;
+        if (payBtn) payBtn.disabled = false;
+        if (payText) payText.innerText = `Pay ₹${total.toLocaleString('en-IN')} & Confirm`;
+
+        if (modal) {
+            modal.classList.remove('hidden');
+            document.body.classList.add('overflow-hidden');
+        }
+    }
+
+    function closeRazorpayModal() {
+        const modal = document.getElementById('razorpayModal');
+        if (modal) {
+            modal.classList.add('hidden');
+            document.body.classList.remove('overflow-hidden');
+        }
+    }
+
+    function processRazorpayPayment() {
+        const payBtn = document.getElementById('rzpPayNowBtn');
+        const payText = document.getElementById('rzpPayNowText');
+        if (payBtn) payBtn.disabled = true;
+        if (payText) payText.innerHTML = '<span class="inline-block animate-spin mr-2">⏳</span> Authorizing with Razorpay...';
+
+        // Simulate seamless 600ms secure handshake
+        setTimeout(() => {
+            const rzpInput = document.getElementById('razorpayPaymentId');
+            const randomCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+            if (rzpInput) {
+                rzpInput.value = `pay_rzp_${Date.now().toString().slice(-6)}_${randomCode}`;
+            }
+            if (payText) payText.innerText = 'Payment Approved! Finalizing Pass...';
+            setTimeout(() => {
+                if (bookingForm) bookingForm.submit();
+            }, 300);
+        }, 600);
+    }
+
+    function updateUI() {
+        const count = selectedSlots.size;
+        const total = count * pricePerHour;
+
+        // 1. Update Hidden Form Inputs
+        inputsContainer.innerHTML = '';
+        selectedSlots.forEach((slot, id) => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'slot_ids';
+            input.value = id;
+            inputsContainer.appendChild(input);
+        });
+        // Also provide comma-separated fallback for slot_id
+        const fallbackInput = document.createElement('input');
+        fallbackInput.type = 'hidden';
+        fallbackInput.name = 'slot_id';
+        fallbackInput.value = Array.from(selectedSlots.keys()).join(',');
+        inputsContainer.appendChild(fallbackInput);
+
+        // 2. Update Count Badges
+        if (count > 0) {
+            selectedCountBadge.innerText = `${count} slot${count > 1 ? 's' : ''} selected`;
+            selectedCountBadge.classList.remove('hidden');
+            clearSlotsBtn.classList.remove('hidden');
+            summaryBadge.innerText = `${count} hr${count > 1 ? 's' : ''}`;
+        } else {
+            selectedCountBadge.classList.add('hidden');
+            clearSlotsBtn.classList.add('hidden');
+            summaryBadge.innerText = '0 hrs';
+        }
+
+        // 3. Update Slot Button Styles
+        slotButtons.forEach(btn => {
+            const slotId = btn.getAttribute('data-slot-id');
+            const labelEl = btn.querySelector('.slot-label');
+            const badgeEl = btn.querySelector('.slot-badge');
+
+            if (selectedSlots.has(slotId)) {
+                btn.className = 'slot-btn p-3.5 rounded-2xl border border-brand-600 bg-brand-600 text-white transition-all duration-200 flex flex-col items-center justify-center text-center focus:outline-none group relative cursor-pointer shadow-md shadow-brand-600/30 ring-2 ring-brand-500/20 scale-[1.02]';
+                if (labelEl) labelEl.className = 'slot-label text-xs font-bold text-white';
+                if (badgeEl) {
+                    badgeEl.className = 'slot-badge text-[10px] font-bold text-white bg-white/20 px-2 py-0.5 rounded-full mt-1';
+                    badgeEl.innerText = 'Selected ✓';
+                }
+            } else {
+                btn.className = 'slot-btn p-3.5 rounded-2xl border border-slate-200 bg-white hover:border-brand-500 hover:bg-brand-50/50 text-slate-800 transition-all duration-200 flex flex-col items-center justify-center text-center focus:outline-none group relative cursor-pointer shadow-sm hover:shadow';
+                if (labelEl) labelEl.className = 'slot-label text-xs font-bold group-hover:text-brand-700 transition-colors';
+                if (badgeEl) {
+                    badgeEl.className = 'slot-badge text-[10px] font-semibold text-emerald-600 mt-1 transition-colors';
+                    badgeEl.innerText = 'Available';
+                }
+            }
+        });
+
+        // 4. Update Summary Slot List
+        summarySlotCountText.innerText = `${count} selected`;
+        summaryHoursMulti.innerText = count;
+        summaryHoursPlural.innerText = count === 1 ? '' : 's';
+        summaryDuration.innerText = count > 0 ? `${count} Hour${count > 1 ? 's' : ''} (${count * 60} mins)` : '0 Hours';
+
+        if (count === 0) {
+            summarySlotsList.innerHTML = '<span class="text-xs text-amber-600 font-semibold italic">No slots selected yet</span>';
+        } else {
+            summarySlotsList.innerHTML = '';
+            selectedSlots.forEach((slot, id) => {
+                const chip = document.createElement('button');
+                chip.type = 'button';
+                chip.className = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold bg-brand-50 text-brand-700 border border-brand-200 hover:bg-rose-50 hover:text-rose-700 hover:border-rose-200 transition-colors group cursor-pointer';
+                chip.innerHTML = `<span>${slot.label}</span><span class="text-slate-400 group-hover:text-rose-600 text-[10px]">✕</span>`;
+                chip.title = 'Click to remove this slot';
+                chip.addEventListener('click', () => {
+                    selectedSlots.delete(id);
+                    updateUI();
+                });
+                summarySlotsList.appendChild(chip);
+            });
+        }
+
+        // 5. Update Fee and Total
+        summaryCourtFee.innerText = '₹' + total.toLocaleString('en-IN');
+        summaryTotalPrice.innerText = '₹' + total.toLocaleString('en-IN');
+
+        // 6. Update Submit Button
+        if (submitBtn) {
+            if (count > 0) {
+                submitBtn.disabled = false;
+                if (currentPaymentMethod === 'RAZORPAY') {
+                    submitBtn.className = 'w-full py-4 rounded-2xl bg-brand-600 hover:bg-brand-500 text-white font-extrabold text-sm shadow-lg shadow-brand-600/30 transition-all cursor-pointer flex items-center justify-center gap-2';
+                    submitBtn.innerHTML = `<span>Pay ₹${total.toLocaleString('en-IN')} via Razorpay</span>`;
+                } else {
+                    submitBtn.className = 'w-full py-4 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-sm shadow-lg shadow-emerald-600/30 transition-all cursor-pointer flex items-center justify-center gap-2';
+                    submitBtn.innerHTML = `<span>Confirm (Pay ₹${total.toLocaleString('en-IN')} at Counter)</span>`;
+                }
+            } else {
+                submitBtn.disabled = true;
+                submitBtn.className = 'w-full py-4 rounded-2xl bg-slate-200 text-slate-400 font-extrabold text-sm transition-all cursor-not-allowed shadow-none';
+                submitBtn.innerText = 'Select a Slot to Continue';
+            }
+        }
+
+        // 7. Update Mobile Floating Summary Bar
+        const mobileBookingBar = document.getElementById('mobileBookingBar');
+        const mobileSelectedCount = document.getElementById('mobileSelectedCount');
+        const mobileTotalPrice = document.getElementById('mobileTotalPrice');
+        const mobileSubmitBtn = document.getElementById('mobileSubmitBtn');
+        if (mobileBookingBar) {
+            if (count > 0) {
+                mobileBookingBar.classList.remove('translate-y-full');
+                if (mobileSelectedCount) mobileSelectedCount.innerText = `${count} Slot${count > 1 ? 's' : ''} Selected`;
+                if (mobileTotalPrice) mobileTotalPrice.innerText = '₹' + total.toLocaleString('en-IN');
+                if (mobileSubmitBtn) {
+                    mobileSubmitBtn.innerHTML = currentPaymentMethod === 'RAZORPAY' ? '<span>Pay Razorpay</span>' : '<span>Book (Cash)</span>';
+                }
+            } else {
+                mobileBookingBar.classList.add('translate-y-full');
+            }
+        }
+    }
+
+    // Toggle slot selection on click
+    function attachSlotClickHandlers() {
+        document.querySelectorAll('#slotsGrid .slot-btn').forEach(btn => {
+            btn.onclick = () => {
+                const slotId = btn.getAttribute('data-slot-id');
+                const slotLabel = btn.getAttribute('data-slot-label');
+
+                if (selectedSlots.has(slotId)) {
+                    selectedSlots.delete(slotId);
+                } else {
+                    selectedSlots.set(slotId, { id: slotId, label: slotLabel });
+                }
+                updateUI();
+            };
+        });
+    }
+
+    attachSlotClickHandlers();
+
+    // Clear all slots
+    if (clearSlotsBtn) {
+        clearSlotsBtn.addEventListener('click', () => {
+            selectedSlots.clear();
+            updateUI();
+        });
+    }
+
+    // Form submission validation (Slots, Player Name, 10-digit Phone, Payment Method)
+    if (bookingForm) {
+        const playerNameInput = document.getElementById('bookingPlayerName');
+        const playerPhoneInput = document.getElementById('bookingPlayerPhone');
+        const nameError = document.getElementById('bookingNameError');
+        const phoneError = document.getElementById('bookingPhoneError');
+        const phoneCount = document.getElementById('bookingPhoneCount');
+
+        function cleanPhone(val) {
+            let d = val.replace(/[\s\-\(\)\.]/g, '');
+            if (d.startsWith('+91')) d = d.substring(3);
+            else if (d.startsWith('91') && d.length === 12) d = d.substring(2);
+            else if (d.startsWith('0') && d.length === 11) d = d.substring(1);
+            return d.replace(/\+/g, '');
+        }
+
+        if (playerPhoneInput) {
+            if (playerPhoneInput.value) {
+                const initDigits = cleanPhone(playerPhoneInput.value);
+                if (phoneCount) phoneCount.textContent = `${initDigits.length}/10 digits`;
+            }
+
+            playerPhoneInput.addEventListener('input', () => {
+                const digits = cleanPhone(playerPhoneInput.value);
+                if (phoneCount) phoneCount.textContent = `${digits.length}/10 digits`;
+                if (digits.length === 10) {
+                    playerPhoneInput.classList.remove('border-rose-300', 'bg-rose-50/30');
+                    playerPhoneInput.classList.add('border-emerald-400');
+                    if (phoneError) phoneError.classList.add('hidden');
+                }
+            });
+        }
+
+        bookingForm.addEventListener('submit', (e) => {
+            if (selectedSlots.size === 0) {
+                e.preventDefault();
+                alert('Please select at least one time slot to book.');
+                return false;
+            }
+
+            if (playerNameInput && playerNameInput.value.trim().length < 2) {
+                e.preventDefault();
+                playerNameInput.classList.add('border-rose-300', 'bg-rose-50/30');
+                if (nameError) {
+                    nameError.textContent = 'Player name must be at least 2 characters.';
+                    nameError.classList.remove('hidden');
+                }
+                playerNameInput.focus();
+                return false;
+            }
+
+            if (playerPhoneInput) {
+                const digits = cleanPhone(playerPhoneInput.value);
+                if (digits.length !== 10 || !/^\d+$/.test(digits)) {
+                    e.preventDefault();
+                    playerPhoneInput.classList.add('border-rose-300', 'bg-rose-50/30');
+                    if (phoneError) {
+                        phoneError.textContent = `Mobile number must be exactly 10 digits (${digits.length}/10 entered).`;
+                        phoneError.classList.remove('hidden');
+                    }
+                    playerPhoneInput.focus();
+                    return false;
+                }
+            }
+
+            // If Razorpay is chosen and payment ID is not yet generated, open the Razorpay Checkout Modal
+            const rzpPaymentId = document.getElementById('razorpayPaymentId')?.value;
+            if (currentPaymentMethod === 'RAZORPAY' && !rzpPaymentId) {
+                e.preventDefault();
+                const total = selectedSlots.size * pricePerHour;
+                const slotLabels = Array.from(selectedSlots.values()).map(s => s.label).join(', ');
+                openRazorpayModal(total, slotLabels);
+                return false;
+            }
+
+            // Otherwise (Cash on Counter or Razorpay authorized), submit directly
+            return true;
+        });
+    }
+
+    // REAL-TIME MULTI-BRANCH SYNCHRONIZATION FUNCTION
+    function syncLiveSlots(isManualDateChange = false) {
+        const currentDate = datePicker ? datePicker.value : "{{ selected_date_str }}";
+        if (summaryDate) summaryDate.innerText = currentDate;
+
+        fetch(`/api/turfs/{{ turf.id }}/slots/?date=${encodeURIComponent(currentDate)}`, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (!data.booked_slot_ids) return;
+
+            const newBookedIds = new Set(data.booked_slot_ids.map(Number));
+            let hadConflict = false;
+
+            // Check if any slot state changed
+            document.querySelectorAll('#slotsGrid > div, #slotsGrid > button').forEach(el => {
+                const sId = Number(el.getAttribute('data-slot-id'));
+                if (!sId) return;
+
+                let sLabel = el.getAttribute('data-slot-label');
+                if (!sLabel) {
+                    const labelSpan = el.querySelector('.slot-label') || el.querySelector('span');
+                    sLabel = labelSpan ? labelSpan.innerText.trim() : '';
+                }
+                if (!sLabel) return;
+
+                if (newBookedIds.has(sId)) {
+                    // Slot is booked
+                    if (el.tagName === 'BUTTON') {
+                        // Slot was previously available, now booked!
+                        const div = document.createElement('div');
+                        div.setAttribute('data-slot-id', sId);
+                        div.setAttribute('data-slot-label', sLabel);
+                        div.className = 'p-3.5 rounded-2xl border border-slate-200 bg-slate-100 text-slate-400 flex flex-col items-center justify-center text-center cursor-not-allowed opacity-60 select-none';
+                        div.innerHTML = `<span class="slot-label text-xs font-bold">${sLabel}</span><span class="slot-badge text-[10px] uppercase font-bold text-rose-500 mt-1">Booked</span>`;
+                        el.replaceWith(div);
+
+                        // If user had it selected, deselect and alert!
+                        if (selectedSlots.has(String(sId)) || selectedSlots.has(sId)) {
+                            selectedSlots.delete(String(sId));
+                            selectedSlots.delete(sId);
+                            hadConflict = true;
+                        }
+                    } else if (el.tagName === 'DIV') {
+                        // Ensure data attributes are always present
+                        if (!el.getAttribute('data-slot-label')) el.setAttribute('data-slot-label', sLabel);
+                    }
+                } else {
+                    // Slot is available
+                    if (el.tagName === 'DIV') {
+                        // Slot was previously booked, now available
+                        const btn = document.createElement('button');
+                        btn.type = 'button';
+                        btn.setAttribute('data-slot-id', sId);
+                        btn.setAttribute('data-slot-label', sLabel);
+                        btn.className = 'slot-btn p-3.5 rounded-2xl border border-slate-200 bg-white hover:border-brand-500 hover:bg-brand-50/50 text-slate-800 transition-all duration-200 flex flex-col items-center justify-center text-center focus:outline-none group relative cursor-pointer shadow-sm hover:shadow';
+                        btn.innerHTML = `<span class="slot-label text-xs font-bold group-hover:text-brand-700 transition-colors">${sLabel}</span><span class="slot-badge text-[10px] font-semibold text-emerald-600 mt-1 transition-colors">Available</span>`;
+                        el.replaceWith(btn);
+                    }
+                }
+            });
+
+            // Re-bind click handlers on newly available buttons
+            attachSlotClickHandlers();
+
+            // Notify if a selected slot was taken by someone else
+            const alertBox = document.getElementById('slotConflictAlert');
+            const alertMsg = document.getElementById('slotConflictMsg');
+            if (hadConflict) {
+                if (alertMsg) alertMsg.textContent = '⚠️ Attention: One of your selected slots was just reserved and synchronized across branches.';
+                if (alertBox) alertBox.classList.remove('hidden');
+                setTimeout(() => { if (alertBox) alertBox.classList.add('hidden'); }, 7000);
+            }
+
+            // Update Sibling Branches Live Badges
+            if (data.all_branches_sync && data.all_branches_sync.length > 0) {
+                const list = document.getElementById('syncBranchesList');
+                if (list) {
+                    list.innerHTML = data.all_branches_sync.map(b => {
+                        const isCurrent = (data.current_branch && data.current_branch.id === b.id);
+                        const openSlots = b.turfs ? b.turfs.reduce((acc, t) => acc + (t.available_count || 0), 0) : 0;
+                        return `
+                            <span class="px-3 py-1.5 rounded-xl text-xs font-bold ${isCurrent ? 'bg-brand-600 text-white shadow-sm ring-1 ring-white/20' : 'bg-slate-800 text-slate-300 border border-slate-700'} flex items-center gap-1.5 transition-all">
+                                <span class="w-1.5 h-1.5 rounded-full ${openSlots > 0 ? 'bg-emerald-400' : 'bg-rose-400'}"></span>
+                                <span>${b.name}</span>
+                                <span class="text-[10px] font-semibold opacity-80">(${openSlots} open)</span>
+                            </span>
+                        `;
+                    }).join('');
+                }
+            }
+
+            updateUI();
+        })
+        .catch(err => console.log('Sync polling error:', err));
+    }
+
+    // Dynamic date picker change without full page refresh
+    if (datePicker) {
+        datePicker.addEventListener('change', () => {
+            selectedSlots.clear();
+            const newDate = datePicker.value;
+            window.history.replaceState({}, '', `${window.location.pathname}?date=${encodeURIComponent(newDate)}`);
+            syncLiveSlots(true);
+        });
+    }
+
+    // Start background synchronization polling every 3.5 seconds
+    setInterval(syncLiveSlots, 3500);
+    // Initial fetch to load live sibling branch occupancy
+    syncLiveSlots(false);
+</script>
+{% endblock %}

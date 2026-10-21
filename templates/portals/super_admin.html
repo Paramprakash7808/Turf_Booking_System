@@ -1,0 +1,1177 @@
+{% extends 'base.html' %}
+
+{% block title %}Super Admin Control Panel - TurfBook{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+
+    <!-- Top Banner & Super Admin Header -->
+    <div class="bg-gradient-to-r from-slate-950 via-indigo-950 to-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-2xl border border-indigo-900/40 relative overflow-hidden mb-8">
+        <div class="absolute -right-12 -top-12 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div>
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/20 border border-indigo-400/30 text-indigo-300 text-xs font-bold uppercase tracking-wider mb-3">
+                    <i data-lucide="crown" class="w-3.5 h-3.5 text-amber-400"></i> Platform Owner Portal
+                </div>
+                <h1 class="text-2xl sm:text-4xl font-black tracking-tight text-white">Super Admin Command Center</h1>
+                <p class="mt-1 text-sm text-indigo-200/80 font-medium max-w-xl">
+                    Master management for all sports organizations, branches, facilities, and system-wide revenue in Ahmedabad.
+                </p>
+            </div>
+
+            <!-- Action: Super Admin Top Action Buttons -->
+            <div class="flex flex-wrap items-center gap-2.5">
+                <button type="button" onclick="openCreateRoleModal()" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold text-xs backdrop-blur-sm shadow-md transition-all cursor-pointer">
+                    <i data-lucide="shield-plus" class="w-4 h-4 text-emerald-400"></i>
+                    <span>Create Role</span>
+                </button>
+                <button type="button" onclick="openAddStaffModal()" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-md shadow-indigo-600/30 transition-all cursor-pointer">
+                    <i data-lucide="user-plus" class="w-4 h-4"></i>
+                    <span>Add Staff / Member</span>
+                </button>
+                <button type="button" onclick="openCreateOrgModal()" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-gradient-to-r from-brand-500 to-emerald-500 hover:from-brand-600 hover:to-emerald-600 text-white font-extrabold text-xs shadow-lg shadow-brand-500/25 transition-all transform hover:-translate-y-0.5 cursor-pointer">
+                    <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                    <span>Add Organization</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- KPI Metrics Grid -->
+        <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4 mt-8 pt-6 border-t border-indigo-900/50">
+            <div class="bg-white/5 backdrop-blur-sm rounded-2xl p-4 border border-white/10">
+                <span class="text-xs font-bold text-indigo-200/70 block uppercase tracking-wider">Organizations</span>
+                <div class="text-2xl sm:text-3xl font-black text-white mt-1">{{ total_organizations }}</div>
+            </div>
+            <div class="bg-white/5 backdrop-blur-sm rounded-2xl p-4 border border-white/10">
+                <span class="text-xs font-bold text-indigo-200/70 block uppercase tracking-wider">Total Branches</span>
+                <div class="text-2xl sm:text-3xl font-black text-white mt-1">{{ total_branches }}</div>
+            </div>
+            <div class="bg-white/5 backdrop-blur-sm rounded-2xl p-4 border border-white/10">
+                <span class="text-xs font-bold text-indigo-200/70 block uppercase tracking-wider">Active Turfs</span>
+                <div class="text-2xl sm:text-3xl font-black text-white mt-1">{{ total_turfs }}</div>
+            </div>
+            <div class="bg-white/5 backdrop-blur-sm rounded-2xl p-4 border border-white/10">
+                <span class="text-xs font-bold text-indigo-200/70 block uppercase tracking-wider">Staff & Roles</span>
+                <div class="text-2xl sm:text-3xl font-black text-white mt-1">{{ total_team_members }}</div>
+            </div>
+            <div class="bg-white/5 backdrop-blur-sm rounded-2xl p-4 border border-white/10 col-span-2 sm:col-span-1">
+                <span class="text-xs font-bold text-emerald-400 block uppercase tracking-wider">Gross Revenue</span>
+                <div class="text-2xl sm:text-3xl font-black text-emerald-300 mt-1">₹{{ total_revenue|floatformat:0 }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation Tabs (Horizontally touch-scrollable on mobile) -->
+    <div class="flex items-center gap-2 border-b border-slate-200 pb-3 mb-8 overflow-x-auto scrollbar-none touch-scroll flex-nowrap -mx-4 px-4 sm:mx-0 sm:px-0">
+        <button type="button" onclick="switchTab('orgsTab', this)" class="super-tab-btn shrink-0 whitespace-nowrap px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-brand-600 text-white shadow-sm flex items-center gap-2 transition-all">
+            <i data-lucide="building-2" class="w-4 h-4"></i> Organizations ({{ total_organizations }})
+        </button>
+        <button type="button" onclick="switchTab('branchesTab', this)" class="super-tab-btn shrink-0 whitespace-nowrap px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-white text-slate-600 hover:text-slate-900 border border-slate-200 hover:bg-slate-50 flex items-center gap-2 transition-all">
+            <i data-lucide="git-branch" class="w-4 h-4"></i> All Branches ({{ total_branches }})
+        </button>
+        <button type="button" onclick="switchTab('turfsTab', this)" class="super-tab-btn shrink-0 whitespace-nowrap px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-white text-slate-600 hover:text-slate-900 border border-slate-200 hover:bg-slate-50 flex items-center gap-2 transition-all">
+            <i data-lucide="trophy" class="w-4 h-4"></i> Turfs Catalog ({{ total_turfs }})
+        </button>
+        <button type="button" onclick="switchTab('teamTab', this)" class="super-tab-btn shrink-0 whitespace-nowrap px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-white text-slate-600 hover:text-slate-900 border border-slate-200 hover:bg-slate-50 flex items-center gap-2 transition-all">
+            <i data-lucide="users" class="w-4 h-4"></i> Staff & Roles ({{ total_team_members }})
+        </button>
+        <button type="button" onclick="switchTab('bookingsTab', this)" class="super-tab-btn shrink-0 whitespace-nowrap px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-white text-slate-600 hover:text-slate-900 border border-slate-200 hover:bg-slate-50 flex items-center gap-2 transition-all">
+            <i data-lucide="calendar" class="w-4 h-4"></i> System Bookings
+        </button>
+    </div>
+
+    <!-- 1. TAB: Organizations List -->
+    <div id="orgsTab" class="super-tab-content block space-y-6">
+        <div class="flex items-center justify-between">
+            <h2 class="text-xl font-black text-slate-900">Partner Sports Organizations</h2>
+            <span class="text-xs font-semibold text-slate-500">Click any organization to view its branches, managers & turfs</span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for org in organizations %}
+            <div class="bg-white rounded-3xl p-6 border border-slate-200/90 shadow-sm hover:shadow-xl hover:border-brand-500/40 transition-all duration-300 flex flex-col justify-between group">
+                <div>
+                    <div class="flex items-start justify-between gap-3 mb-4">
+                        <div class="w-12 h-12 rounded-2xl bg-indigo-50 group-hover:bg-brand-50 group-hover:scale-105 border border-indigo-100 group-hover:border-brand-200 flex items-center justify-center text-indigo-600 group-hover:text-brand-600 font-black text-lg transition-all">
+                            {{ org.name|slice:":1" }}
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <span class="px-2.5 py-1 rounded-full text-xs font-extrabold uppercase tracking-wider {% if org.is_active %}bg-emerald-50 text-emerald-700 border border-emerald-200{% else %}bg-slate-100 text-slate-500{% endif %}">
+                                {% if org.is_active %}Active{% else %}Inactive{% endif %}
+                            </span>
+                            <button type="button" 
+                                    onclick="openEditOrgModal(this)"
+                                    data-id="{{ org.id }}"
+                                    data-name="{{ org.name }}"
+                                    data-email="{{ org.email }}"
+                                    data-phone="{{ org.phone }}"
+                                    data-address="{{ org.address }}"
+                                    data-description="{{ org.description }}"
+                                    data-is-active="{% if org.is_active %}1{% else %}0{% endif %}"
+                                    class="p-1.5 rounded-xl bg-slate-100 hover:bg-indigo-50 text-slate-600 hover:text-indigo-600 transition-colors cursor-pointer" title="Edit Organization">
+                                <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+                            </button>
+                            <button type="button" 
+                                    onclick="openDeleteOrgModal(this)"
+                                    data-id="{{ org.id }}"
+                                    data-name="{{ org.name }}"
+                                    data-branch-count="{{ org.branch_count }}"
+                                    data-turf-count="{{ org.turf_count }}"
+                                    class="p-1.5 rounded-xl bg-slate-100 hover:bg-rose-50 text-slate-600 hover:text-rose-600 transition-colors cursor-pointer" title="Delete Organization">
+                                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <a href="{% url 'super_admin_org_detail' org.id %}" class="block group-hover:text-brand-600 transition-colors">
+                        <h3 class="text-lg font-black text-slate-900 group-hover:text-brand-600 transition-colors">{{ org.name }}</h3>
+                    </a>
+                    <p class="text-xs text-slate-500 mt-1 line-clamp-2 leading-relaxed">{{ org.description|default:"Premier sporting organization operating quality courts in Ahmedabad." }}</p>
+
+                    <div class="mt-4 pt-4 border-t border-slate-100 grid grid-cols-2 gap-3 text-center">
+                        <div class="bg-slate-50 group-hover:bg-slate-100/70 rounded-xl p-2.5 transition-colors">
+                            <span class="text-[10px] font-bold uppercase text-slate-400 block">Branches</span>
+                            <span class="text-base font-extrabold text-slate-800">{{ org.branch_count }}</span>
+                        </div>
+                        <div class="bg-slate-50 group-hover:bg-slate-100/70 rounded-xl p-2.5 transition-colors">
+                            <span class="text-[10px] font-bold uppercase text-slate-400 block">Turfs</span>
+                            <span class="text-base font-extrabold text-slate-800">{{ org.turf_count }}</span>
+                        </div>
+                    </div>
+
+                    <div class="mt-3 space-y-1 text-xs text-slate-600">
+                        {% if org.email %}
+                        <div class="flex items-center gap-1.5 truncate">
+                            <i data-lucide="mail" class="w-3.5 h-3.5 text-slate-400"></i>
+                            <span>{{ org.email }}</span>
+                        </div>
+                        {% endif %}
+                        {% if org.phone %}
+                        <div class="flex items-center gap-1.5">
+                            <i data-lucide="phone" class="w-3.5 h-3.5 text-slate-400"></i>
+                            <span>{{ org.phone }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between gap-3">
+                    <a href="{% url 'super_admin_org_detail' org.id %}" class="flex-1 text-center px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-brand-600 text-white font-bold text-xs shadow-sm transition-all flex items-center justify-center gap-1.5">
+                        <span>Manage Branches</span>
+                        <i data-lucide="arrow-right" class="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform"></i>
+                    </a>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-span-full bg-white rounded-3xl p-12 text-center border border-slate-200">
+                <i data-lucide="building-2" class="w-12 h-12 text-slate-300 mx-auto mb-3"></i>
+                <h3 class="text-base font-bold text-slate-800">No Organizations Found</h3>
+                <p class="text-xs text-slate-500 mt-1">Get started by creating your first partner sports organization.</p>
+                <button type="button" onclick="openCreateOrgModal()" class="mt-4 px-4 py-2 rounded-xl bg-brand-600 text-white font-bold text-xs">Add Organization</button>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- 2. TAB: All Branches Directory -->
+    <div id="branchesTab" class="super-tab-content hidden space-y-6">
+        <div class="flex items-center justify-between">
+            <h2 class="text-xl font-black text-slate-900">All Registered Branches</h2>
+            <span class="text-xs font-semibold text-slate-500">Every branch grouped by its parent organization</span>
+        </div>
+
+        <div class="bg-white rounded-3xl shadow-sm border border-slate-200/90 overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs">
+                    <thead class="bg-slate-50/80 border-b border-slate-200 text-slate-500 uppercase tracking-wider font-extrabold">
+                        <tr>
+                            <th class="py-4 px-6">Branch Name</th>
+                            <th class="py-4 px-6">Organization</th>
+                            <th class="py-4 px-6">Location</th>
+                            <th class="py-4 px-6">Contact Phone</th>
+                            <th class="py-4 px-6">Turfs</th>
+                            <th class="py-4 px-6">Status</th>
+                            <th class="py-4 px-6 text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        {% for branch in all_branches %}
+                        <tr class="hover:bg-slate-50/60 transition-colors">
+                            <td class="py-4 px-6 font-bold text-slate-900 flex items-center gap-2">
+                                <a href="{% url 'branch_detail' branch.id %}" class="w-7 h-7 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-xs transition-colors">
+                                    <i data-lucide="map-pin" class="w-3.5 h-3.5"></i>
+                                </a>
+                                <a href="{% url 'branch_detail' branch.id %}" class="hover:text-brand-600 transition-colors">
+                                    {{ branch.name }}
+                                </a>
+                            </td>
+                            <td class="py-4 px-6 font-semibold text-slate-700">
+                                <a href="{% url 'super_admin_org_detail' branch.organization.id %}" class="hover:text-brand-600 transition-colors">
+                                    {{ branch.organization.name }}
+                                </a>
+                            </td>
+                            <td class="py-4 px-6 text-slate-600">{{ branch.location }}, {{ branch.city }}</td>
+                            <td class="py-4 px-6 text-slate-600">{{ branch.phone|default:"—" }}</td>
+                            <td class="py-4 px-6 font-extrabold text-slate-900">{{ branch.turf_count }} courts</td>
+                            <td class="py-4 px-6">
+                                <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider {% if branch.is_active %}bg-emerald-50 text-emerald-700{% else %}bg-slate-100 text-slate-500{% endif %}">
+                                    {% if branch.is_active %}Active{% else %}Inactive{% endif %}
+                                </span>
+                            </td>
+                            <td class="py-4 px-6 text-right">
+                                <div class="inline-flex items-center gap-1.5 justify-end">
+                                    <a href="{% url 'branch_detail' branch.id %}" 
+                                       class="p-2 rounded-xl bg-slate-100 hover:bg-brand-50 text-slate-600 hover:text-brand-600 transition-colors cursor-pointer" title="View Branch & Courts">
+                                        <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+                                    </a>
+                                    <button type="button" 
+                                            onclick="openEditBranchModal(this)"
+                                            data-id="{{ branch.id }}"
+                                            data-name="{{ branch.name }}"
+                                            data-city="{{ branch.city }}"
+                                            data-location="{{ branch.location }}"
+                                            data-address="{{ branch.address }}"
+                                            data-phone="{{ branch.phone }}"
+                                            data-email="{{ branch.email }}"
+                                            data-is-active="{% if branch.is_active %}1{% else %}0{% endif %}"
+                                            data-org="{{ branch.organization.id }}"
+                                            class="p-2 rounded-xl bg-slate-100 hover:bg-indigo-50 text-slate-600 hover:text-indigo-600 transition-colors cursor-pointer" title="Edit Branch">
+                                        <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+                                    </button>
+                                    <button type="button" 
+                                            onclick="openDeleteBranchModal(this)"
+                                            data-id="{{ branch.id }}"
+                                            data-name="{{ branch.name }}"
+                                            data-org-name="{{ branch.organization.name }}"
+                                            data-turf-count="{{ branch.turf_count }}"
+                                            class="p-2 rounded-xl bg-slate-100 hover:bg-rose-50 text-slate-600 hover:text-rose-600 transition-colors cursor-pointer" title="Delete Branch">
+                                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                    </button>
+                                    <a href="{% url 'super_admin_org_detail' branch.organization.id %}" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-brand-50 hover:text-brand-700 text-slate-700 font-bold text-xs transition-colors">
+                                        Manage Org
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="py-8 text-center text-slate-400">No branches registered yet.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. TAB: Turfs Catalog -->
+    <div id="turfsTab" class="super-tab-content hidden space-y-6">
+        <div class="flex items-center justify-between">
+            <h2 class="text-xl font-black text-slate-900">Platform Turfs Directory</h2>
+            <span class="text-xs font-semibold text-slate-500">All registered playing facilities across Ahmedabad</span>
+        </div>
+
+        <div class="bg-white rounded-3xl shadow-sm border border-slate-200/90 overflow-hidden">
+            <div class="overflow-x-auto touch-scroll">
+                <table class="w-full text-left text-xs min-w-[700px]">
+                    <thead class="bg-slate-50/80 border-b border-slate-200 text-slate-500 uppercase tracking-wider font-extrabold">
+                        <tr>
+                            <th class="py-4 px-6">Turf Name</th>
+                            <th class="py-4 px-6">Sport</th>
+                            <th class="py-4 px-6">Organization</th>
+                            <th class="py-4 px-6">Branch</th>
+                            <th class="py-4 px-6">Rate</th>
+                            <th class="py-4 px-6">Rating</th>
+                            <th class="py-4 px-6 text-right">Preview</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        {% for turf in all_turfs %}
+                        <tr class="hover:bg-slate-50/60 transition-colors">
+                            <td class="py-4 px-6 font-bold text-slate-900">{{ turf.name }}</td>
+                            <td class="py-4 px-6">
+                                <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-slate-100 text-slate-700">
+                                    {{ turf.primary_sport.name|default:"Multi-Sport" }}
+                                </span>
+                            </td>
+                            <td class="py-4 px-6 font-semibold text-slate-700">{{ turf.organization.name|default:"Independent" }}</td>
+                            <td class="py-4 px-6 text-slate-600">{{ turf.branch.name|default:turf.location }}</td>
+                            <td class="py-4 px-6 font-extrabold text-slate-900">₹{{ turf.price_per_hour|floatformat:0 }}/hr</td>
+                            <td class="py-4 px-6">⭐ {{ turf.rating }} ({{ turf.rating_count }})</td>
+                            <td class="py-4 px-6 text-right">
+                                <a href="{% url 'turf_detail' turf.slug %}" target="_blank" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition-colors">
+                                    View
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. TAB: Global System Bookings -->
+    <div id="bookingsTab" class="super-tab-content hidden space-y-6">
+        <div class="flex items-center justify-between">
+            <h2 class="text-xl font-black text-slate-900">Recent Platform Reservations</h2>
+            <span class="text-xs font-semibold text-slate-500">Live booking feed</span>
+        </div>
+
+        <div class="bg-white rounded-3xl shadow-sm border border-slate-200/90 overflow-hidden">
+            <div class="overflow-x-auto touch-scroll">
+                <table class="w-full text-left text-xs min-w-[700px]">
+                    <thead class="bg-slate-50/80 border-b border-slate-200 text-slate-500 uppercase tracking-wider font-extrabold">
+                        <tr>
+                            <th class="py-4 px-6">Pass #</th>
+                            <th class="py-4 px-6">Player</th>
+                            <th class="py-4 px-6">Turf & Organization</th>
+                            <th class="py-4 px-6">Date & Slot</th>
+                            <th class="py-4 px-6">Amount</th>
+                            <th class="py-4 px-6">Status</th>
+                            <th class="py-4 px-6 text-right">Ticket</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        {% for b in recent_bookings %}
+                        <tr class="hover:bg-slate-50/60 transition-colors">
+                            <td class="py-4 px-6 font-mono font-bold text-slate-900">#TB-{{ b.id }}</td>
+                            <td class="py-4 px-6">
+                                <div class="font-bold text-slate-900">{{ b.player_name }}</div>
+                                <div class="text-[11px] text-slate-400">{{ b.player_phone }}</div>
+                            </td>
+                            <td class="py-4 px-6">
+                                <div class="font-semibold text-slate-800">{{ b.turf.name }}</div>
+                                <div class="text-[11px] text-slate-400">{{ b.turf.organization.name|default:"Independent" }}</div>
+                            </td>
+                            <td class="py-4 px-6">
+                                <div class="font-semibold text-slate-800">{{ b.date|date:"d M Y" }}</div>
+                                <div class="text-[11px] text-slate-500">{{ b.time_slot.label }}</div>
+                            </td>
+                            <td class="py-4 px-6 font-extrabold text-slate-900">₹{{ b.total_price|floatformat:0 }}</td>
+                            <td class="py-4 px-6">
+                                <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider {% if b.status == 'CONFIRMED' %}bg-emerald-50 text-emerald-700{% elif b.status == 'COMPLETED' %}bg-blue-50 text-blue-700{% else %}bg-rose-50 text-rose-700{% endif %}">
+                                    {{ b.status }}
+                                </span>
+                            </td>
+                            <td class="py-4 px-6 text-right">
+                                <a href="{% url 'booking_ticket' b.id %}" target="_blank" class="px-3 py-1 rounded-lg bg-brand-50 text-brand-700 hover:bg-brand-100 font-bold text-xs transition-colors">
+                                    Ticket
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. TAB: Staff Members & Roles Across All Organizations -->
+    <div id="teamTab" class="super-tab-content hidden space-y-8">
+        <!-- Section: Staff & Members -->
+        <div class="space-y-4">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                    <h2 class="text-xl font-black text-slate-900">Platform Staff & Team Members</h2>
+                    <p class="text-xs text-slate-500 font-medium">All registered administrators, managers, and staff across organizations</p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button type="button" onclick="openAddStaffModal()" class="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-md shadow-indigo-600/20 transition-all flex items-center gap-1.5 cursor-pointer">
+                        <i data-lucide="user-plus" class="w-4 h-4"></i>
+                        <span>Add Staff / Member</span>
+                    </button>
+                    <button type="button" onclick="openCreateRoleModal()" class="px-4 py-2.5 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-800 font-bold text-xs shadow-sm transition-all flex items-center gap-1.5 cursor-pointer">
+                        <i data-lucide="shield-plus" class="w-4 h-4 text-emerald-600"></i>
+                        <span>Create Role</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-3xl shadow-sm border border-slate-200/90 overflow-hidden">
+                <div class="overflow-x-auto touch-scroll">
+                    <table class="w-full text-left text-xs min-w-[650px]">
+                        <thead class="bg-slate-50/80 border-b border-slate-200 text-slate-500 uppercase tracking-wider font-extrabold">
+                            <tr>
+                                <th class="py-4 px-6">Name & Email</th>
+                                <th class="py-4 px-6">Organization</th>
+                                <th class="py-4 px-6">Assigned Role</th>
+                                <th class="py-4 px-6">Branch</th>
+                                <th class="py-4 px-6">Contact</th>
+                                <th class="py-4 px-6 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            {% for m in all_team_members %}
+                            <tr class="hover:bg-slate-50/60 transition-colors">
+                                <td class="py-4 px-6">
+                                    <div class="font-bold text-slate-900">{{ m.user.get_full_name|default:m.user.username }}</div>
+                                    <div class="text-[11px] text-slate-400 font-normal">{{ m.user.email }}</div>
+                                </td>
+                                <td class="py-4 px-6">
+                                    {% if m.organization %}
+                                    <a href="{% url 'super_admin_org_detail' m.organization.id %}" class="font-bold text-slate-800 hover:text-brand-600 transition-colors">
+                                        {{ m.organization.name }}
+                                    </a>
+                                    {% else %}
+                                    <span class="text-slate-400">—</span>
+                                    {% endif %}
+                                </td>
+                                <td class="py-4 px-6">
+                                    <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider {% if m.role == 'ORG_ADMIN' %}bg-amber-50 text-amber-700 border border-amber-200{% elif m.role == 'MANAGER' %}bg-blue-50 text-blue-700 border border-blue-200{% else %}bg-indigo-50 text-indigo-700 border border-indigo-200{% endif %}">
+                                        {{ m.role_display_name }}
+                                    </span>
+                                </td>
+                                <td class="py-4 px-6 text-slate-600">{{ m.branch.name|default:"All Branches (Head Office)" }}</td>
+                                <td class="py-4 px-6 text-slate-600">{{ m.phone|default:"—" }}</td>
+                                <td class="py-4 px-6 text-right">
+                                    {% if m.organization %}
+                                    <a href="{% url 'super_admin_org_detail' m.organization.id %}" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-brand-50 hover:text-brand-700 text-slate-700 font-bold text-xs transition-colors">
+                                        Manage Org
+                                    </a>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="py-8 text-center text-slate-400">No staff or managers registered yet. Click "Add Staff / Member" above to create one.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section: Operational Custom Roles -->
+        <div class="space-y-4 pt-4 border-t border-slate-200">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h3 class="text-lg font-black text-slate-900">System-Wide Operational Roles</h3>
+                    <p class="text-xs text-slate-500">Custom permission configurations across partner organizations</p>
+                </div>
+                <button type="button" onclick="openCreateRoleModal()" class="text-xs font-bold text-brand-600 hover:underline flex items-center gap-1 cursor-pointer">
+                    <i data-lucide="shield-plus" class="w-3.5 h-3.5"></i> Create Role
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {% for role in all_roles %}
+                <div class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
+                    <div>
+                        <div class="flex items-start justify-between mb-3">
+                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-brand-50 text-brand-700 border border-brand-100">
+                                {{ role.organization.name }}
+                            </span>
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-slate-100 text-slate-600">
+                                {{ role.assigned_count }} Staff
+                            </span>
+                        </div>
+
+                        <h4 class="text-base font-black text-slate-900">{{ role.name }}</h4>
+                        <p class="text-xs text-slate-500 mt-1 line-clamp-2 leading-relaxed">{{ role.description|default:"No role description provided." }}</p>
+
+                        <div class="mt-4 pt-3 border-t border-slate-100">
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-2">Granted Privileges:</span>
+                            <div class="flex flex-wrap gap-1.5">
+                                {% if role.can_manage_bookings %}
+                                <span class="px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 text-[10px] font-bold">Check-in Passes</span>
+                                {% endif %}
+                                {% if role.can_manage_turfs %}
+                                <span class="px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 text-[10px] font-bold">Turfs</span>
+                                {% endif %}
+                                {% if role.can_manage_slots %}
+                                <span class="px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 text-[10px] font-bold">Slots</span>
+                                {% endif %}
+                                {% if role.can_manage_staff %}
+                                <span class="px-2 py-0.5 rounded-md bg-purple-50 text-purple-700 text-[10px] font-bold">Staff</span>
+                                {% endif %}
+                                {% if role.can_view_reports %}
+                                <span class="px-2 py-0.5 rounded-md bg-amber-50 text-amber-700 text-[10px] font-bold">Reports</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-span-full bg-white rounded-3xl p-8 text-center border border-slate-200">
+                    <p class="text-sm font-bold text-slate-700">No Custom Roles Created Yet</p>
+                    <p class="text-xs text-slate-400 mt-1">Super Admin can create roles for any partner organization.</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Add New Organization -->
+<div id="createOrgModal" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-slate-200 relative max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between pb-4 border-b border-slate-100 mb-6">
+            <div class="flex items-center gap-2">
+                <div class="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold">
+                    <i data-lucide="building-2" class="w-4 h-4"></i>
+                </div>
+                <h3 class="text-lg font-black text-slate-900">Create New Organization</h3>
+            </div>
+            <button type="button" onclick="closeCreateOrgModal()" class="text-slate-400 hover:text-slate-600 p-1">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+
+        <form action="{% url 'super_admin_create_org' %}" method="POST" class="space-y-4">
+            {% csrf_token %}
+            <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Organization Name *</label>
+                <input type="text" name="name" required minlength="2" placeholder="e.g. Skyline Sports Group" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Contact Phone</label>
+                    <input type="tel" name="phone" placeholder="+91 98765 43210" maxlength="15" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Head Office Address</label>
+                    <input type="text" name="address" placeholder="Bodakdev, Ahmedabad" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                </div>
+            </div>
+
+            <div class="pt-3 border-t border-slate-100">
+                <span class="text-xs font-black uppercase tracking-wider text-brand-600 block mb-2">Primary Org Admin Account</span>
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Admin Full Name</label>
+                        <input type="text" name="admin_name" placeholder="Raj Patel" class="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Admin Email (Used for Login) *</label>
+                        <input type="email" name="admin_email" required pattern="[^@\s]+@[^@\s]+\.[^@\s]+" title="Email must contain '@' and '.'" placeholder="admin.skyline@turfbook.com" class="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Temporary Password</label>
+                        <input type="password" name="admin_password" minlength="8" value="password123" class="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                        <span class="text-[11px] text-slate-400 mt-0.5 block">Default: password123</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pt-4 flex items-center justify-end gap-2">
+                <button type="button" onclick="closeCreateOrgModal()" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs">Cancel</button>
+                <button type="submit" class="px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs shadow-md">Create Organization</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal: Edit Organization -->
+<div id="editOrgModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto animate-fade-in">
+        <div class="flex items-center justify-between pb-4 border-b border-slate-100 mb-5">
+            <div>
+                <h3 class="text-lg font-black text-slate-900 flex items-center gap-2">
+                    <i data-lucide="edit-3" class="w-5 h-5 text-indigo-600"></i>
+                    <span>Edit Organization</span>
+                </h3>
+                <p class="text-xs text-slate-500 mt-0.5">Update organization profile, headquarters, and operational status</p>
+            </div>
+            <button type="button" onclick="closeEditOrgModal()" class="p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-500 cursor-pointer">
+                <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+        </div>
+
+        <form id="editOrgForm" method="POST" action="" class="space-y-4">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ request.path }}">
+
+            <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Organization Name *</label>
+                <input type="text" id="editOrgName" name="name" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Description</label>
+                <textarea id="editOrgDescription" name="description" rows="2" class="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"></textarea>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Official Email</label>
+                    <input type="email" id="editOrgEmail" name="email" pattern="[^@\s]+@[^@\s]+\.[^@\s]+" title="Email must contain '@' and '.'" placeholder="contact@org.com" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Official Phone</label>
+                    <input type="tel" id="editOrgPhone" name="phone" placeholder="+91 98765 43210" maxlength="15" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Head Office Address</label>
+                <input type="text" id="editOrgAddress" name="address" placeholder="Bodakdev, Ahmedabad" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+            </div>
+
+            <div class="pt-1">
+                <label class="inline-flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" id="editOrgIsActive" name="is_active" class="w-4 h-4 rounded text-brand-600 focus:ring-brand-500">
+                    <span class="text-xs font-bold text-slate-700">Active Organization (Operational across platform)</span>
+                </label>
+            </div>
+
+            <div class="pt-4 border-t border-slate-100 flex items-center justify-end gap-2">
+                <button type="button" onclick="closeEditOrgModal()" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs cursor-pointer">Cancel</button>
+                <button type="submit" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-md cursor-pointer">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal: Delete Organization Confirmation -->
+<div id="deleteOrgModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-100 animate-fade-in">
+        <div class="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center mx-auto mb-4">
+            <i data-lucide="alert-triangle" class="w-6 h-6"></i>
+        </div>
+
+        <div class="text-center mb-6">
+            <h3 class="text-lg font-black text-slate-900">Delete Organization?</h3>
+            <p class="text-xs text-slate-500 mt-1">Are you sure you want to permanently delete this organization? This action cannot be undone.</p>
+            <div class="mt-3 p-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-left space-y-1">
+                <p class="text-xs font-bold text-slate-800" id="delOrgNameText">Organization Name</p>
+                <p class="text-[11px] text-rose-600 font-semibold" id="delOrgBranchesText">All branches, roles, and courts under this organization will be permanently deleted.</p>
+                <p class="text-[11px] text-slate-500" id="delOrgStaffText">Assigned staff members will have their roles reset.</p>
+            </div>
+        </div>
+
+        <form id="deleteOrgForm" method="POST" action="">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ request.path }}">
+            <div class="flex items-center justify-end gap-2">
+                <button type="button" onclick="closeDeleteOrgModal()" class="w-1/2 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs cursor-pointer">Cancel</button>
+                <button type="submit" class="w-1/2 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs shadow-md shadow-rose-600/30 cursor-pointer">Yes, Delete</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal: Edit Branch -->
+<div id="editBranchModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto animate-fade-in">
+        <div class="flex items-center justify-between pb-4 border-b border-slate-100 mb-5">
+            <div>
+                <h3 class="text-lg font-black text-slate-900 flex items-center gap-2">
+                    <i data-lucide="edit-3" class="w-5 h-5 text-indigo-600"></i>
+                    <span>Edit Branch</span>
+                </h3>
+                <p class="text-xs text-slate-500 mt-0.5">Modify branch facilities, location, and contact information</p>
+            </div>
+            <button type="button" onclick="closeEditBranchModal()" class="p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-500 cursor-pointer">
+                <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+        </div>
+
+        <form id="editBranchForm" method="POST" action="" class="space-y-4">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ request.path }}">
+
+            <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Branch Name *</label>
+                <input type="text" id="editBranchName" name="name" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Location / Area *</label>
+                    <input type="text" id="editBranchLocation" name="location" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">City</label>
+                    <input type="text" id="editBranchCity" name="city" value="Ahmedabad" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Full Address</label>
+                <textarea id="editBranchAddress" name="address" rows="2" class="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"></textarea>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Phone</label>
+                    <input type="tel" id="editBranchPhone" name="phone" placeholder="+91 98765 43210" maxlength="15" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Email</label>
+                    <input type="email" id="editBranchEmail" name="email" pattern="[^@\s]+@[^@\s]+\.[^@\s]+" title="Email must contain '@' and '.'" placeholder="branch@example.com" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Parent Organization</label>
+                <select id="editBranchOrg" name="organization_id" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 bg-white">
+                    {% for org in organizations %}
+                    <option value="{{ org.id }}">{{ org.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="pt-1">
+                <label class="inline-flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" id="editBranchIsActive" name="is_active" class="w-4 h-4 rounded text-brand-600 focus:ring-brand-500">
+                    <span class="text-xs font-bold text-slate-700">Active Branch (Visible for bookings)</span>
+                </label>
+            </div>
+
+            <div class="pt-4 border-t border-slate-100 flex items-center justify-end gap-2">
+                <button type="button" onclick="closeEditBranchModal()" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs cursor-pointer">Cancel</button>
+                <button type="submit" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-md cursor-pointer">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal: Delete Branch Confirmation -->
+<div id="deleteBranchModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-100 animate-fade-in">
+        <div class="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center mx-auto mb-4">
+            <i data-lucide="alert-triangle" class="w-6 h-6"></i>
+        </div>
+
+        <div class="text-center mb-6">
+            <h3 class="text-lg font-black text-slate-900">Delete Branch?</h3>
+            <p class="text-xs text-slate-500 mt-1">Are you sure you want to permanently delete this branch?</p>
+            <div class="mt-3 p-3 rounded-2xl bg-slate-50 border border-slate-200 text-left">
+                <p class="text-xs font-bold text-slate-800" id="delBranchNameText">Branch Name</p>
+                <p class="text-[11px] text-slate-500" id="delBranchOrgText">Organization</p>
+                <p class="text-[11px] text-amber-600 font-semibold mt-1" id="delBranchTurfsText">Courts assigned will be unlinked.</p>
+            </div>
+        </div>
+
+        <form id="deleteBranchForm" method="POST" action="">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ request.path }}">
+            <div class="flex items-center justify-end gap-2">
+                <button type="button" onclick="closeDeleteBranchModal()" class="w-1/2 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs cursor-pointer">Cancel</button>
+                <button type="submit" class="w-1/2 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs shadow-md shadow-rose-600/30 cursor-pointer">Yes, Delete</button>
+            </div>
+        </form>
+    </div>
+</div>
+<!-- Modal: Create Role (Global Super Admin) -->
+<div id="createRoleModal" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl border border-slate-200 relative animate-fade-in max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between pb-4 border-b border-slate-100 mb-6">
+            <div>
+                <h3 class="text-lg font-black text-slate-900">Create Operational Role</h3>
+                <p class="text-xs text-slate-500 mt-0.5">Define role & permissions for any organization</p>
+            </div>
+            <button type="button" onclick="closeCreateRoleModal()" class="text-slate-400 hover:text-slate-600 p-1 cursor-pointer">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+
+        <form action="{% url 'super_admin_create_role' %}" method="POST" class="space-y-4">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ request.path }}">
+
+            <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Select Organization *</label>
+                <select name="organization_id" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 bg-white">
+                    <option value="" disabled selected>Choose Organization</option>
+                    {% for o in organizations %}
+                    <option value="{{ o.id }}">{{ o.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Role Title *</label>
+                <input type="text" name="name" required placeholder="e.g. Area Operations Lead, Floor Cashier, Staff" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Description</label>
+                <input type="text" name="description" placeholder="Responsible for managing court slots & check-ins" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+            </div>
+
+            <div class="pt-2 border-t border-slate-100 space-y-2.5">
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-600 block">Privileges & Permissions:</span>
+                
+                <label class="flex items-center gap-2.5 text-xs text-slate-700 cursor-pointer">
+                    <input type="checkbox" name="can_manage_bookings" checked class="w-4 h-4 text-brand-600 rounded">
+                    <span><strong>Check-in & Verification:</strong> Scan & verify customer match passes</span>
+                </label>
+                <label class="flex items-center gap-2.5 text-xs text-slate-700 cursor-pointer">
+                    <input type="checkbox" name="can_manage_turfs" class="w-4 h-4 text-brand-600 rounded">
+                    <span><strong>Manage Turfs & Facilities:</strong> Update court details</span>
+                </label>
+                <label class="flex items-center gap-2.5 text-xs text-slate-700 cursor-pointer">
+                    <input type="checkbox" name="can_manage_slots" class="w-4 h-4 text-brand-600 rounded">
+                    <span><strong>Manage Slot Times:</strong> Open/close booking slots</span>
+                </label>
+                <label class="flex items-center gap-2.5 text-xs text-slate-700 cursor-pointer">
+                    <input type="checkbox" name="can_manage_staff" class="w-4 h-4 text-brand-600 rounded">
+                    <span><strong>Manage Staff:</strong> Add & assign employees</span>
+                </label>
+                <label class="flex items-center gap-2.5 text-xs text-slate-700 cursor-pointer">
+                    <input type="checkbox" name="can_view_reports" class="w-4 h-4 text-brand-600 rounded">
+                    <span><strong>Analytics & Reports:</strong> View financial summaries</span>
+                </label>
+            </div>
+
+            <div class="pt-4 flex items-center justify-end gap-2">
+                <button type="button" onclick="closeCreateRoleModal()" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs cursor-pointer">Cancel</button>
+                <button type="submit" class="px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs shadow-md cursor-pointer">Create Role</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal: Add Staff / Member (Global Super Admin) -->
+<div id="addStaffModal" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl border border-slate-200 relative animate-fade-in max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between pb-4 border-b border-slate-100 mb-6">
+            <div>
+                <h3 class="text-lg font-black text-slate-900">Add Staff / Member</h3>
+                <p class="text-xs text-slate-500 mt-0.5">Provision login account under an organization</p>
+            </div>
+            <button type="button" onclick="closeAddStaffModal()" class="text-slate-400 hover:text-slate-600 p-1 cursor-pointer">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+
+        <form action="{% url 'super_admin_create_team_member' %}" method="POST" class="space-y-4">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ request.path }}">
+
+            <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Select Organization *</label>
+                <select name="organization_id" id="globalStaffOrgSelect" required onchange="onGlobalOrgChange(this.value)" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 bg-white">
+                    <option value="" disabled selected>Choose Organization</option>
+                    {% for o in organizations %}
+                    <option value="{{ o.id }}">{{ o.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-600 mb-1">First Name *</label>
+                    <input type="text" name="first_name" required minlength="2" placeholder="Aarav" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Last Name</label>
+                    <input type="text" name="last_name" placeholder="Shah" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Login Email *</label>
+                <input type="email" name="email" required pattern="[^@\s]+@[^@\s]+\.[^@\s]+" title="Email must contain '@' and '.'" placeholder="staff.member@turfbook.com" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                <span class="text-[10px] text-slate-400 mt-0.5 block">Used for unified credentials login at /login/ (must have @ and .)</span>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Password</label>
+                    <input type="password" name="password" minlength="8" value="password123" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Phone</label>
+                    <input type="tel" name="phone" placeholder="+91 98765 43210" maxlength="15" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold uppercase text-slate-600 mb-1">System Portal Access *</label>
+                <select name="system_role" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 bg-white">
+                    <option value="STAFF" selected>Staff (Check-in Station & Scanner)</option>
+                    <option value="MANAGER">Manager (Operations Dashboard)</option>
+                    <option value="ORG_ADMIN">Organization Admin (Full Org Control)</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Operational Role (Optional)</label>
+                <select name="custom_role_id" id="globalStaffRoleSelect" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 bg-white">
+                    <option value="">Default System Role</option>
+                    {% for r in all_roles %}
+                    <option value="{{ r.id }}" data-org="{{ r.organization.id }}">{{ r.name }} ({{ r.organization.name }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Assign Branch</label>
+                <select name="branch_id" id="globalStaffBranchSelect" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 bg-white">
+                    <option value="">All Branches (Head Office)</option>
+                    {% for b in all_branches %}
+                    <option value="{{ b.id }}" data-org="{{ b.organization.id }}">{{ b.name }} ({{ b.organization.name }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="pt-4 flex items-center justify-end gap-2">
+                <button type="button" onclick="closeAddStaffModal()" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs cursor-pointer">Cancel</button>
+                <button type="submit" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-md cursor-pointer">Add Staff / Member</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function switchTab(tabId, btn) {
+        document.querySelectorAll('.super-tab-content').forEach(el => el.classList.add('hidden'));
+        const activeContent = document.getElementById(tabId);
+        if (activeContent) activeContent.classList.remove('hidden');
+
+        document.querySelectorAll('.super-tab-btn').forEach(b => {
+            b.className = 'super-tab-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-white text-slate-600 hover:text-slate-900 border border-slate-200 hover:bg-slate-50 flex items-center gap-2 transition-all';
+        });
+        btn.className = 'super-tab-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-brand-600 text-white shadow-sm flex items-center gap-2 transition-all';
+        lucide.createIcons();
+    }
+
+    function openCreateOrgModal() {
+        const modal = document.getElementById('createOrgModal');
+        if (modal) {
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            lucide.createIcons();
+        }
+    }
+
+    function closeCreateOrgModal() {
+        const modal = document.getElementById('createOrgModal');
+        if (modal) {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+    }
+
+    function openEditOrgModal(elOrId, name, email, phone, address, description, isActive) {
+        let id = elOrId;
+        if (typeof elOrId === 'object' && elOrId !== null && elOrId.getAttribute) {
+            const btn = elOrId;
+            id = btn.getAttribute('data-id');
+            name = btn.getAttribute('data-name');
+            email = btn.getAttribute('data-email');
+            phone = btn.getAttribute('data-phone');
+            address = btn.getAttribute('data-address');
+            description = btn.getAttribute('data-description');
+            isActive = btn.getAttribute('data-is-active') === '1';
+        }
+        const form = document.getElementById('editOrgForm');
+        if (form) {
+            form.action = `/super-admin/orgs/${id}/update/`;
+        }
+        document.getElementById('editOrgName').value = name || '';
+        document.getElementById('editOrgEmail').value = email || '';
+        document.getElementById('editOrgPhone').value = phone || '';
+        document.getElementById('editOrgAddress').value = address || '';
+        document.getElementById('editOrgDescription').value = description || '';
+        document.getElementById('editOrgIsActive').checked = Boolean(isActive);
+
+        const modal = document.getElementById('editOrgModal');
+        if (modal) {
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            lucide.createIcons();
+        }
+    }
+
+    function closeEditOrgModal() {
+        const modal = document.getElementById('editOrgModal');
+        if (modal) {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+    }
+
+    function openDeleteOrgModal(elOrId, name, branchCount, turfCount) {
+        let id = elOrId;
+        if (typeof elOrId === 'object' && elOrId !== null && elOrId.getAttribute) {
+            const btn = elOrId;
+            id = btn.getAttribute('data-id');
+            name = btn.getAttribute('data-name');
+            branchCount = btn.getAttribute('data-branch-count');
+            turfCount = btn.getAttribute('data-turf-count');
+        }
+        const form = document.getElementById('deleteOrgForm');
+        if (form) {
+            form.action = `/super-admin/orgs/${id}/delete/`;
+        }
+        document.getElementById('delOrgNameText').innerText = name || 'Organization';
+        document.getElementById('delOrgBranchesText').innerText = `Deleting will remove ${branchCount || 0} branches, all custom roles, and ${turfCount || 0} turf courts permanently.`;
+
+        const modal = document.getElementById('deleteOrgModal');
+        if (modal) {
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            lucide.createIcons();
+        }
+    }
+
+    function closeDeleteOrgModal() {
+        const modal = document.getElementById('deleteOrgModal');
+        if (modal) {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+    }
+
+    function openEditBranchModal(elOrId, name, city, location, address, phone, email, isActive, orgId) {
+        let id = elOrId;
+        if (typeof elOrId === 'object' && elOrId !== null && elOrId.getAttribute) {
+            const btn = elOrId;
+            id = btn.getAttribute('data-id');
+            name = btn.getAttribute('data-name');
+            city = btn.getAttribute('data-city');
+            location = btn.getAttribute('data-location');
+            address = btn.getAttribute('data-address');
+            phone = btn.getAttribute('data-phone');
+            email = btn.getAttribute('data-email');
+            isActive = btn.getAttribute('data-is-active') === '1';
+            orgId = btn.getAttribute('data-org');
+        }
+        const form = document.getElementById('editBranchForm');
+        if (form) {
+            form.action = `/super-admin/branches/${id}/update/`;
+        }
+        document.getElementById('editBranchName').value = name || '';
+        document.getElementById('editBranchCity').value = city || 'Ahmedabad';
+        document.getElementById('editBranchLocation').value = location || '';
+        document.getElementById('editBranchAddress').value = address || '';
+        document.getElementById('editBranchPhone').value = phone || '';
+        document.getElementById('editBranchEmail').value = email || '';
+        document.getElementById('editBranchIsActive').checked = Boolean(isActive);
+        const orgSelect = document.getElementById('editBranchOrg');
+        if (orgSelect && orgId) {
+            orgSelect.value = orgId;
+        }
+
+        const modal = document.getElementById('editBranchModal');
+        if (modal) {
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            lucide.createIcons();
+        }
+    }
+
+    function closeEditBranchModal() {
+        const modal = document.getElementById('editBranchModal');
+        if (modal) {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+    }
+
+    function openDeleteBranchModal(elOrId, name, orgName, turfCount) {
+        let id = elOrId;
+        if (typeof elOrId === 'object' && elOrId !== null && elOrId.getAttribute) {
+            const btn = elOrId;
+            id = btn.getAttribute('data-id');
+            name = btn.getAttribute('data-name');
+            orgName = btn.getAttribute('data-org-name');
+            turfCount = btn.getAttribute('data-turf-count');
+        }
+        const form = document.getElementById('deleteBranchForm');
+        if (form) {
+            form.action = `/super-admin/branches/${id}/delete/`;
+        }
+        document.getElementById('delBranchNameText').innerText = name || 'Branch';
+        document.getElementById('delBranchOrgText').innerText = `Organization: ${orgName || 'N/A'}`;
+        document.getElementById('delBranchTurfsText').innerText = `${turfCount || 0} courts linked to this branch.`;
+
+        const modal = document.getElementById('deleteBranchModal');
+        if (modal) {
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            lucide.createIcons();
+        }
+    }
+
+    function closeDeleteBranchModal() {
+        const modal = document.getElementById('deleteBranchModal');
+        if (modal) {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+    }
+
+    function openCreateRoleModal() {
+        const modal = document.getElementById('createRoleModal');
+        if (modal) {
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            lucide.createIcons();
+        }
+    }
+
+    function closeCreateRoleModal() {
+        const modal = document.getElementById('createRoleModal');
+        if (modal) {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+    }
+
+    function openAddStaffModal() {
+        const modal = document.getElementById('addStaffModal');
+        if (modal) {
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            const orgSelect = document.getElementById('globalStaffOrgSelect');
+            if (orgSelect && orgSelect.value) {
+                onGlobalOrgChange(orgSelect.value);
+            }
+            lucide.createIcons();
+        }
+    }
+
+    function closeAddStaffModal() {
+        const modal = document.getElementById('addStaffModal');
+        if (modal) {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+    }
+
+    function onGlobalOrgChange(orgId) {
+        const branchSelect = document.getElementById('globalStaffBranchSelect');
+        if (branchSelect) {
+            Array.from(branchSelect.options).forEach(opt => {
+                if (!opt.value) {
+                    opt.style.display = 'block';
+                } else {
+                    const optOrg = opt.getAttribute('data-org');
+                    if (!orgId || optOrg === orgId) {
+                        opt.style.display = 'block';
+                    } else {
+                        opt.style.display = 'none';
+                        if (opt.selected) opt.selected = false;
+                    }
+                }
+            });
+        }
+
+        const roleSelect = document.getElementById('globalStaffRoleSelect');
+        if (roleSelect) {
+            Array.from(roleSelect.options).forEach(opt => {
+                if (!opt.value) {
+                    opt.style.display = 'block';
+                } else {
+                    const optOrg = opt.getAttribute('data-org');
+                    if (!orgId || optOrg === orgId) {
+                        opt.style.display = 'block';
+                    } else {
+                        opt.style.display = 'none';
+                        if (opt.selected) opt.selected = false;
+                    }
+                }
+            });
+        }
+    }
+</script>
+{% endblock %}

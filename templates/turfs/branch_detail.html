@@ -1,0 +1,338 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ branch.name }} - {{ organization.name }} | TurfBook Ahmedabad{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-10">
+
+    <!-- Breadcrumbs -->
+    <nav class="flex items-center gap-2 text-xs font-semibold text-slate-500">
+        <a href="{% url 'home' %}" class="hover:text-slate-900 transition-colors">Home</a>
+        <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+        <a href="{% url 'turf_list' %}" class="hover:text-slate-900 transition-colors">Venues</a>
+        <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+        <span class="text-slate-600 font-medium">{{ organization.name }}</span>
+        <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+        <span class="text-slate-900 font-bold">{{ branch.name }}</span>
+    </nav>
+
+    <!-- Branch Hero Header Card -->
+    <div class="relative bg-gradient-to-br from-slate-900 via-slate-850 to-slate-950 rounded-3xl p-6 sm:p-8 md:p-10 text-white shadow-xl overflow-hidden border border-slate-800">
+        <div class="absolute -right-20 -bottom-20 w-80 h-80 bg-brand-500/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="absolute -left-20 -top-20 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div class="space-y-3">
+                <div class="flex flex-wrap items-center gap-2">
+                    <span class="px-3 py-1 rounded-full text-xs font-bold bg-white/10 text-white border border-white/15 backdrop-blur-md flex items-center gap-1.5">
+                        <i data-lucide="building-2" class="w-3.5 h-3.5 text-brand-400"></i>
+                        <span>{{ organization.name }}</span>
+                    </span>
+                    <span class="px-3 py-1 rounded-full text-xs font-bold {% if branch.is_active %}bg-emerald-500/20 text-emerald-300 border border-emerald-500/30{% else %}bg-slate-700 text-slate-300{% endif %} flex items-center gap-1">
+                        <span class="w-2 h-2 rounded-full {% if branch.is_active %}bg-emerald-400 animate-pulse{% else %}bg-slate-400{% endif %}"></span>
+                        <span>{% if branch.is_active %}Active Facility{% else %}Temporarily Offline{% endif %}</span>
+                    </span>
+                    <span class="px-3 py-1 rounded-full text-xs font-bold bg-slate-800/80 text-slate-300 border border-slate-700/80">
+                        {{ branch.city }}
+                    </span>
+                </div>
+
+                <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-white">
+                    {{ branch.name }}
+                </h1>
+
+                <p class="text-sm sm:text-base text-slate-300 flex items-center gap-2">
+                    <i data-lucide="map-pin" class="w-4 h-4 text-brand-400 shrink-0"></i>
+                    <span>{{ branch.location }}, {{ branch.city }}</span>
+                </p>
+            </div>
+
+            <!-- Header Action Controls -->
+            <div class="flex flex-wrap items-center gap-3">
+                {% if is_super_admin %}
+                <a href="{% url 'super_admin_org_detail' organization.id %}" class="px-5 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs border border-white/20 transition-all flex items-center gap-2">
+                    <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                    <span>Back to Organization</span>
+                </a>
+                {% elif is_org_admin %}
+                <a href="{% url 'org_admin_dashboard' %}" class="px-5 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs border border-white/20 transition-all flex items-center gap-2">
+                    <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                    <span>Org Admin Dashboard</span>
+                </a>
+                {% else %}
+                <a href="{% url 'turf_list' %}" class="px-5 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs border border-white/20 transition-all flex items-center gap-2">
+                    <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                    <span>Explore All Turfs</span>
+                </a>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Quick Branch Highlight Stats -->
+        <div class="mt-8 pt-6 border-t border-slate-800 grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div class="bg-white/5 rounded-2xl p-4 border border-white/10 backdrop-blur-sm">
+                <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 block">Total Courts</span>
+                <span class="text-2xl font-black text-white mt-1 block">{{ turfs.count }}</span>
+            </div>
+            <div class="bg-white/5 rounded-2xl p-4 border border-white/10 backdrop-blur-sm">
+                <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 block">Operating City</span>
+                <span class="text-2xl font-black text-emerald-400 mt-1 block">{{ branch.city }}</span>
+            </div>
+            <div class="bg-white/5 rounded-2xl p-4 border border-white/10 backdrop-blur-sm">
+                <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 block">Stationed Staff</span>
+                <span class="text-2xl font-black text-brand-400 mt-1 block">{{ staff_members.count }}</span>
+            </div>
+            <div class="bg-white/5 rounded-2xl p-4 border border-white/10 backdrop-blur-sm">
+                <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 block">Operating Status</span>
+                <span class="text-2xl font-black text-white mt-1 block">{% if branch.is_active %}Open{% else %}Closed{% endif %}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- COURTS & GROUNDS AT THIS BRANCH (Styled like Home Page Featured Turfs) -->
+    <section class="space-y-6">
+        <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
+            <div>
+                <span class="text-xs font-bold uppercase tracking-wider text-brand-600">Available Playing Arenas</span>
+                <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Courts & Facilities Under {{ branch.name }}</h2>
+                <p class="text-sm text-slate-500 mt-1">Select any court to view live slots, amenities, and reserve instantly</p>
+            </div>
+            <span class="text-xs font-bold text-slate-500 bg-slate-100 px-3 py-1.5 rounded-xl border border-slate-200">
+                {{ turfs.count }} Active {% if turfs.count == 1 %}Court{% else %}Courts{% endif %}
+            </span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {% for turf in turfs %}
+            <div class="turf-card group bg-white rounded-3xl overflow-hidden border border-slate-200/80 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col cursor-pointer" data-detail-url="{% url 'turf_detail' turf.slug %}">
+                <!-- Turf Image & Badges -->
+                <a href="{% url 'turf_detail' turf.slug %}" class="block relative aspect-[16/10] overflow-hidden bg-slate-200 cursor-pointer">
+                    <img src="{{ turf.image_url|default:'https://images.unsplash.com/photo-1575361204480-aadea25e6e68?auto=format&fit=crop&w=800&q=80' }}" alt="{{ turf.name }}" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1575361204480-aadea25e6e68?auto=format&fit=crop&w=800&q=80';" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                    
+                    <div class="absolute top-4 left-4 flex flex-wrap gap-1.5 pointer-events-none">
+                        {% for sport in turf.sports.all %}
+                        <span class="px-3 py-1 rounded-full text-xs font-bold bg-white/90 backdrop-blur-md text-slate-800 shadow-sm">
+                            {{ sport.name }}
+                        </span>
+                        {% endfor %}
+                    </div>
+
+                    <div class="absolute bottom-4 right-4 px-2.5 py-1 rounded-full bg-slate-900/80 backdrop-blur-md text-amber-400 text-xs font-bold flex items-center gap-1 shadow-md pointer-events-none">
+                        <i data-lucide="star" class="w-3.5 h-3.5 fill-amber-400"></i>
+                        <span>{{ turf.rating }}</span>
+                    </div>
+                </a>
+
+                <!-- Turf Details -->
+                <div class="p-6 flex-1 flex flex-col justify-between">
+                    <div>
+                        <a href="{% url 'turf_detail' turf.slug %}" class="block">
+                            <h3 class="text-xl font-bold text-slate-900 group-hover:text-brand-600 transition-colors">{{ turf.name }}</h3>
+                        </a>
+                        <p class="mt-2 flex items-center gap-1.5 text-sm text-slate-500">
+                            <i data-lucide="map-pin" class="w-4 h-4 text-brand-600 flex-shrink-0"></i>
+                            <span>{{ turf.location }}</span>
+                        </p>
+                        {% if turf.description %}
+                        <p class="mt-2 text-xs text-slate-500 line-clamp-2 leading-relaxed">
+                            {{ turf.description }}
+                        </p>
+                        {% endif %}
+                    </div>
+
+                    <div class="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between">
+                        <div>
+                            <span class="text-xs text-slate-400 font-medium">Starting from</span>
+                            <div class="text-xl font-black text-slate-900">₹{{ turf.price_per_hour|floatformat:0 }}<span class="text-xs text-slate-500 font-medium">/hr</span></div>
+                        </div>
+
+                        <div class="flex items-center gap-2">
+                            <a href="{% url 'turf_detail' turf.slug %}" class="px-3 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors">
+                                Details
+                            </a>
+                            <a href="{% url 'booking' turf.id %}" class="px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-white text-xs font-bold shadow-sm shadow-brand-600/30 transition-all flex items-center gap-1">
+                                <span>Book Now</span>
+                                <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-span-full bg-white rounded-3xl p-12 text-center border border-slate-200 shadow-sm">
+                <div class="w-16 h-16 rounded-2xl bg-slate-50 text-slate-400 flex items-center justify-center mx-auto mb-4 border border-slate-100">
+                    <i data-lucide="layout-grid" class="w-8 h-8"></i>
+                </div>
+                <h3 class="text-lg font-bold text-slate-900">No Courts Configured for this Branch</h3>
+                <p class="text-sm text-slate-500 mt-1 max-w-md mx-auto">This branch location currently has no registered turf courts or grounds.</p>
+                {% if can_manage %}
+                <div class="mt-6">
+                    <a href="{% if is_org_admin %}{% url 'org_admin_dashboard' %}{% else %}{% url 'super_admin_org_detail' organization.id %}{% endif %}" class="px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs shadow-md transition-colors inline-flex items-center gap-1.5">
+                        <i data-lucide="plus" class="w-4 h-4"></i>
+                        <span>Add Court in Management Portal</span>
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    <!-- Branch Location, Address & Contact Details Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        
+        <!-- Location & Operating Details Card -->
+        <div class="bg-white rounded-3xl p-8 border border-slate-200/90 shadow-sm space-y-6">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold">
+                    <i data-lucide="map-pin" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-black text-slate-900">Facility Location & Address</h3>
+                    <p class="text-xs text-slate-500">Official ground coordinates & directions</p>
+                </div>
+            </div>
+
+            <div class="space-y-4 text-sm text-slate-600">
+                <div class="p-4 rounded-2xl bg-slate-50 border border-slate-100 space-y-1">
+                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block">Physical Address</span>
+                    <p class="font-semibold text-slate-800 leading-relaxed">
+                        {{ branch.address|default:branch.location }}
+                    </p>
+                    <p class="text-xs text-slate-500">{{ branch.city }}, Gujarat, India</p>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-100">
+                        <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Zone Area</span>
+                        <span class="text-sm font-bold text-slate-800 mt-0.5 block">{{ branch.location }}</span>
+                    </div>
+                    <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-100">
+                        <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Operating City</span>
+                        <span class="text-sm font-bold text-slate-800 mt-0.5 block">{{ branch.city }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contact & Management Information Card -->
+        <div class="bg-white rounded-3xl p-8 border border-slate-200/90 shadow-sm space-y-6">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-700 flex items-center justify-center font-bold">
+                    <i data-lucide="headset" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-black text-slate-900">Branch Contact & Help Desk</h3>
+                    <p class="text-xs text-slate-500">Direct phone, email, and parent organization</p>
+                </div>
+            </div>
+
+            <div class="space-y-3">
+                <div class="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50 border border-slate-100">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-xl bg-white text-indigo-600 flex items-center justify-center border border-slate-100 shadow-sm">
+                            <i data-lucide="phone" class="w-4 h-4"></i>
+                        </div>
+                        <div>
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Phone Number</span>
+                            <span class="text-sm font-bold text-slate-800">{{ branch.phone|default:organization.phone|default:"On-Site Reception" }}</span>
+                        </div>
+                    </div>
+                    {% if branch.phone or organization.phone %}
+                    <a href="tel:{{ branch.phone|default:organization.phone }}" class="px-3 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-xs transition-colors">
+                        Call Now
+                    </a>
+                    {% endif %}
+                </div>
+
+                <div class="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50 border border-slate-100">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-xl bg-white text-amber-600 flex items-center justify-center border border-slate-100 shadow-sm">
+                            <i data-lucide="mail" class="w-4 h-4"></i>
+                        </div>
+                        <div>
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Email Address</span>
+                            <span class="text-sm font-bold text-slate-800">{{ branch.email|default:organization.email|default:"reception@turfbook.com" }}</span>
+                        </div>
+                    </div>
+                    {% if branch.email or organization.email %}
+                    <a href="mailto:{{ branch.email|default:organization.email }}" class="px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-700 font-bold text-xs transition-colors">
+                        Send Email
+                    </a>
+                    {% endif %}
+                </div>
+
+                <div class="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50 border border-slate-100">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-xl bg-white text-emerald-600 flex items-center justify-center border border-slate-100 shadow-sm">
+                            <i data-lucide="shield-check" class="w-4 h-4"></i>
+                        </div>
+                        <div>
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Parent Network</span>
+                            <span class="text-sm font-bold text-slate-800">{{ organization.name }}</span>
+                        </div>
+                    </div>
+                    <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        Verified Partner
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stationed Operations Staff Section -->
+    <div class="bg-white rounded-3xl p-8 border border-slate-200/90 shadow-sm space-y-6">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-2xl bg-brand-50 text-brand-700 flex items-center justify-center font-bold">
+                    <i data-lucide="users" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-black text-slate-900">Stationed Staff & Field Personnel</h3>
+                    <p class="text-xs text-slate-500">Supervisors, managers, and shift coordinators stationed at this branch</p>
+                </div>
+            </div>
+            <span class="text-xs font-bold text-slate-500 bg-slate-100 px-3 py-1.5 rounded-xl border border-slate-200">
+                {{ staff_members.count }} Stationed
+            </span>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {% for member in staff_members %}
+            <div class="p-4 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-between gap-3 hover:bg-slate-100/70 transition-colors">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-700 text-white font-extrabold flex items-center justify-center text-sm shadow-sm uppercase">
+                        {{ member.user.first_name|default:member.user.username|slice:":1" }}
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-slate-900 text-sm">{{ member.user.get_full_name|default:member.user.username }}</h4>
+                        <p class="text-xs text-slate-400">{{ member.user.email }}</p>
+                    </div>
+                </div>
+                <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase bg-indigo-50 text-indigo-700 border border-indigo-100 shrink-0">
+                    {{ member.custom_role.name|default:member.get_role_display }}
+                </span>
+            </div>
+            {% empty %}
+            <div class="col-span-full py-8 text-center text-slate-400 text-xs italic">
+                General operations team manages this branch. No individually dedicated staff accounts stationed here yet.
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Enable full card click behavior just like on Home Page
+    document.querySelectorAll('.turf-card').forEach(card => {
+        card.addEventListener('click', (e) => {
+            if (e.target.closest('a') || e.target.closest('button')) return;
+            const url = card.getAttribute('data-detail-url');
+            if (url) window.location.href = url;
+        });
+    });
+</script>
+{% endblock %}
